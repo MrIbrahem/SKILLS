@@ -26,10 +26,10 @@ A collection of Claude Code skills for specialized tasks.
 
 ## Skill Overview
 
-| Skill | Type | Purpose |
-|-------|------|---------|
-| **mwclient** | Parent | Interact with MediaWiki APIs (Wikipedia, etc.) |
-| **scrapling** | Standalone | Web scraping with anti-bot protection |
+| Skill         | Type       | Purpose                                        |
+| ------------- | ---------- | ---------------------------------------------- |
+| **mwclient**  | Parent     | Interact with MediaWiki APIs (Wikipedia, etc.) |
+| **scrapling** | Standalone | Web scraping with anti-bot protection          |
 
 ---
 
@@ -45,31 +45,31 @@ A skill family for working with MediaWiki instances like Wikipedia.
 
 A standalone skill for web scraping with multiple fetcher strategies.
 
-| Capability | Description |
-|------------|-------------|
-| **Parsing** | CSS selectors, XPath, BeautifulSoup-style, text/regex search |
-| **Adaptive** | Automatically relocates elements when websites change structure |
-| **Anti-Detection** | TLS fingerprinting, browser automation, Cloudflare bypass |
-| **Async** | Concurrent request handling |
+| Capability         | Description                                                     |
+| ------------------ | --------------------------------------------------------------- |
+| **Parsing**        | CSS selectors, XPath, BeautifulSoup-style, text/regex search    |
+| **Adaptive**       | Automatically relocates elements when websites change structure |
+| **Anti-Detection** | TLS fingerprinting, browser automation, Cloudflare bypass       |
+| **Async**          | Concurrent request handling                                     |
 
 ### Fetcher Types
 
-| Fetcher | Best For |
-|---------|----------|
-| `Fetcher` | Static HTML, simple sites |
-| `DynamicFetcher` | JavaScript-rendered content |
+| Fetcher           | Best For                    |
+| ----------------- | --------------------------- |
+| `Fetcher`         | Static HTML, simple sites   |
+| `DynamicFetcher`  | JavaScript-rendered content |
 | `StealthyFetcher` | Protected sites, Cloudflare |
 
 ---
 
-## Reference
+## Sub-skill Map
 
-| Skill | Invocation | Description |
-|-------|------------|-------------|
-| mwclient | `/mwclient` | Overview, installation, common patterns |
-| mwclient-site | `/mwclient:site` | Connection setup, OAuth, HTTP Basic, tokens, site metadata |
-| mwclient-page | `/mwclient:page` | Content retrieval, editing, page management, backlinks |
-| mwclient-images | `/mwclient:images` | File metadata, upload/download, duplicates, usage tracking |
-| mwclient-listing | `/mwclient:listing` | Lazy pagination, generators vs lists, result iteration |
-| mwclient-errors | `/mwclient:errors` | Exception hierarchy, permission errors, edit conflicts |
-| scrapling | `/scrapling` | Web scraping with anti-bot protection |
+| Sub-skill        | Invocation          | When to use                                               |
+| ---------------- | ------------------- | --------------------------------------------------------- |
+| mwclient         | `/mwclient`         | Overview, installation, common patterns                   |
+| mwclient-site    | `/mwclient:site`    | Connecting to a site, login, auth, session setup          |
+| mwclient-page    | `/mwclient:page`    | Reading & editing pages, get wikitext, save, move, delete |
+| mwclient-images  | `/mwclient:images`  | Images & file uploads, download, get image info           |
+| mwclient-listing | `/mwclient:listing` | Listings & iterators, categories, search, recent changes  |
+| mwclient-errors  | `/mwclient:errors`  | Error handling, catching and recovering from exceptions   |
+| scrapling        | `/scrapling`        | Web scraping, bypassing anti-bot protection               |
