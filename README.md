@@ -2,70 +2,58 @@
 
 A collection of Claude Code skills for specialized tasks.
 
-## Skills Tree
+## Directory Structure
 
 ```
-skills/
-├── mwclient/                          # MediaWiki API Client
-│   ├── site/                          #     Site connection & authentication
-│   ├── page/                          #     Page operations
-│   ├── images/                        #     File/image operations
-│   ├── listing/                       #     Pagination & iteration
-│   └── errors/                        #     Exception handling
-│
-└── scrapling/                         # Web scraping library
-    ├── reference.md                   #     API reference
-    └── examples.md                    #     Extended examples
+.claude/skills/
+├── mwclient/            # MediaWiki API client (parent skill)
+├── mwclient-site/       # Site connection & authentication
+├── mwclient-page/       # Page operations
+├── mwclient-images/     # File/image operations
+├── mwclient-listing/    # Pagination & iteration
+├── mwclient-errors/     # Exception handling
+└── Scrapling/           # Web scraping library
 ```
 
 ## Skill Overview
 
-| Skill | Purpose | When to Use |
-|-------|---------|-------------|
-| **mwclient** | Interact with MediaWiki APIs (Wikipedia, etc.) | Building wiki bots, automating edits, scraping wiki content |
-| **scrapling** | Extract data from websites | Web scraping, bypassing anti-bot protection, handling JavaScript-heavy sites |
+| Skill | Type | Purpose |
+|-------|------|---------|
+| **mwclient** | Parent | Interact with MediaWiki APIs (Wikipedia, etc.) |
+| **mwclient-site** | Sub-skill | Connect to wikis and authenticate |
+| **mwclient-page** | Sub-skill | Read, edit, move, delete wiki pages |
+| **mwclient-images** | Sub-skill | Upload, download, manage files |
+| **mwclient-listing** | Sub-skill | Iterate through large result sets |
+| **mwclient-errors** | Sub-skill | Handle exceptions and errors |
+| **scrapling** | Standalone | Web scraping with anti-bot protection |
 
 ---
 
-## mwclient
+## mwclient Skill Family
 
-A skill family for working with MediaWiki instances like Wikipedia.
+A set of skills for working with MediaWiki instances like Wikipedia.
 
-### Hierarchy
-
-```
-mwclient/
-├── site
-│   └── Connect to wikis and authenticate (OAuth, login, tokens)
-│
-├── page
-│   └── Read, edit, move, and delete wiki pages
-│
-├── images
-│   └── Upload, download, and manage files
-│
-├── listing
-│   └── Iterate through large result sets with pagination
-│
-└── errors
-    └── Handle exceptions and error conditions
-```
-
-### Sub-Skills
-
-| Sub-Skill | Responsibility |
-|-----------|----------------|
-| `site` | Connection setup, authentication methods, site metadata, API tokens |
-| `page` | Content retrieval, editing operations, page management, relationships |
-| `images` | File metadata, upload/download, duplicates, usage tracking |
-| `listing` | Lazy pagination, generators vs lists, result iteration |
-| `errors` | Exception hierarchy, permission errors, edit conflicts |
+| Skill | Responsibility |
+|-------|----------------|
+| `mwclient` | Overview, installation, common patterns |
+| `mwclient-site` | Connection setup, OAuth, HTTP Basic, tokens, site metadata |
+| `mwclient-page` | Content retrieval, editing, page management, backlinks |
+| `mwclient-images` | File metadata, upload/download, duplicates, usage tracking |
+| `mwclient-listing` | Lazy pagination, generators vs lists, result iteration |
+| `mwclient-errors` | Exception hierarchy, permission errors, edit conflicts |
 
 ---
 
 ## scrapling
 
-A skill for web scraping with multiple fetcher strategies.
+A standalone skill for web scraping with multiple fetcher strategies.
+
+| Capability | Description |
+|------------|-------------|
+| **Parsing** | CSS selectors, XPath, BeautifulSoup-style, text/regex search |
+| **Adaptive** | Automatically relocates elements when websites change |
+| **Anti-Detection** | TLS fingerprinting, browser automation, Cloudflare bypass |
+| **Async** | Concurrent request handling |
 
 ### Fetcher Types
 
@@ -75,13 +63,6 @@ A skill for web scraping with multiple fetcher strategies.
 | `DynamicFetcher` | JavaScript-rendered content |
 | `StealthyFetcher` | Protected sites, Cloudflare |
 
-### Capabilities
-
-- **Parsing**: CSS selectors, XPath, BeautifulSoup-style, text/regex search
-- **Adaptive**: Automatically relocates elements when websites change structure
-- **Anti-Detection**: TLS fingerprinting, browser automation, Camoufox integration
-- **Async**: Concurrent request handling
-
 ---
 
 ## Reference
@@ -89,9 +70,9 @@ A skill for web scraping with multiple fetcher strategies.
 | Skill | Invocation |
 |-------|------------|
 | mwclient | `/mwclient` |
-| mwclient:site | `/mwclient:site` |
-| mwclient:page | `/mwclient:page` |
-| mwclient:images | `/mwclient:images` |
-| mwclient:listing | `/mwclient:listing` |
-| mwclient:errors | `/mwclient:errors` |
+| mwclient-site | `/mwclient:site` |
+| mwclient-page | `/mwclient:page` |
+| mwclient-images | `/mwclient:images` |
+| mwclient-listing | `/mwclient:listing` |
+| mwclient-errors | `/mwclient:errors` |
 | scrapling | `/scrapling` |
