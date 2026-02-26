@@ -1,186 +1,97 @@
 # Skills Repository
 
-A collection of Claude Code skills for specialized tasks. These skills provide domain-specific knowledge and capabilities to assist with API interactions, web scraping, and more.
+A collection of Claude Code skills for specialized tasks.
 
 ## Skills Tree
 
 ```
 skills/
 ├── mwclient/                          # MediaWiki API Client
-│   ├── site/                          # └── Site connection & authentication
-│   ├── page/                          # └── Page operations (read/edit/move)
-│   ├── images/                        # └── File/image operations
-│   ├── listing/                       # └── Pagination & iteration
-│   └── errors/                        # └── Exception handling
+│   ├── site/                          #     Site connection & authentication
+│   ├── page/                          #     Page operations
+│   ├── images/                        #     File/image operations
+│   ├── listing/                       #     Pagination & iteration
+│   └── errors/                        #     Exception handling
 │
 └── scrapling/                         # Web scraping library
-    ├── reference.md                   # └── API reference
-    └── examples.md                    # └── Extended examples
+    ├── reference.md                   #     API reference
+    └── examples.md                    #     Extended examples
 ```
 
 ## Skill Overview
 
-| Skill | Description | Use When |
-|-------|-------------|----------|
-| **[mwclient](#mwclient)** | Python client for the MediaWiki API | Automating wiki edits, scraping wiki content, uploading files, or building bots for MediaWiki instances |
-| **[scrapling](#scrapling)** | Web scraping with adaptive parsing | Scraping websites, extracting data from HTML, bypassing anti-bot protection, or automating browser interactions |
+| Skill | Purpose | When to Use |
+|-------|---------|-------------|
+| **mwclient** | Interact with MediaWiki APIs (Wikipedia, etc.) | Building wiki bots, automating edits, scraping wiki content |
+| **scrapling** | Extract data from websites | Web scraping, bypassing anti-bot protection, handling JavaScript-heavy sites |
 
 ---
 
 ## mwclient
 
-Python client for the MediaWiki API. Provides a high-level interface for interacting with wikis (like Wikipedia).
+A skill family for working with MediaWiki instances like Wikipedia.
 
-**Core abstractions:** Site (connection), Page (wiki pages), and Image (files)
-
-### Sub-Skills Hierarchy
+### Hierarchy
 
 ```
 mwclient/
-├── Site Level
-│   └── site          # Connection, authentication, site-level queries
-│       ├── OAuth, HTTP Basic, clientlogin
-│       ├── Token management
-│       └── Site metadata (namespaces, version)
+├── site
+│   └── Connect to wikis and authenticate (OAuth, login, tokens)
 │
-├── Content Level
-│   ├── page          # Page operations
-│   │   ├── Read/edit/append/prepend
-│   │   ├── Move/delete/purge
-│   │   └── Backlinks, categories, links
-│   │
-│   └── images        # File operations
-│       ├── Download/upload
-│       ├── Image metadata (imageinfo)
-│       └── File history & usage
+├── page
+│   └── Read, edit, move, and delete wiki pages
 │
-├── Infrastructure
-│   └── listing       # Pagination & iteration
-│       ├── List, GeneratorList, PageList
-│       ├── api_chunk_size vs max_items
-│       └── Continuation tokens
+├── images
+│   └── Upload, download, and manage files
 │
-└── Error Handling
-    └── errors        # Exception hierarchy
-        ├── MwClientError (base)
-        ├── APIError, EditError, LoginError
-        └── InsufficientPermission, ProtectedPageError
+├── listing
+│   └── Iterate through large result sets with pagination
+│
+└── errors
+    └── Handle exceptions and error conditions
 ```
 
-### Quick Start
+### Sub-Skills
 
-```python
-import mwclient
-
-# Connect to a wiki
-site = mwclient.Site('en.wikipedia.org')
-
-# Read a page
-page = site.pages['Python (programming language)']
-print(page.text())
-
-# Edit a page (requires login)
-site.login('username', 'password')
-page.edit('New content', summary='Updated via mwclient')
-```
-
-### Installation
-
-```bash
-pip install mwclient
-```
+| Sub-Skill | Responsibility |
+|-----------|----------------|
+| `site` | Connection setup, authentication methods, site metadata, API tokens |
+| `page` | Content retrieval, editing operations, page management, relationships |
+| `images` | File metadata, upload/download, duplicates, usage tracking |
+| `listing` | Lazy pagination, generators vs lists, result iteration |
+| `errors` | Exception hierarchy, permission errors, edit conflicts |
 
 ---
 
-## Scrapling
+## scrapling
 
-Web scraping library with adaptive parsing, stealth browsing, and multiple fetcher strategies.
-
-**Key Features:**
-- CSS/XPath selectors with Scrapy-compatible pseudo-elements (`::text`, `::attr()`)
-- JavaScript rendering via Playwright/Patchright
-- Cloudflare bypass and anti-bot protection
-- Automatic element relocation when sites change
-- Async support for concurrent requests
+A skill for web scraping with multiple fetcher strategies.
 
 ### Fetcher Types
 
-```
-scrapling/
-├── Fetcher              # Static HTML, APIs, simple sites
-├── DynamicFetcher       # JavaScript-heavy sites
-└── StealthyFetcher      # Cloudflare, advanced anti-bot
-```
+| Fetcher | Best For |
+|---------|----------|
+| `Fetcher` | Static HTML, simple sites |
+| `DynamicFetcher` | JavaScript-rendered content |
+| `StealthyFetcher` | Protected sites, Cloudflare |
 
-### Quick Start
+### Capabilities
 
-```python
-from scrapling import Fetcher
-
-# Basic scraping
-page = Fetcher.get('https://quotes.toscrape.com/')
-quotes = page.css('.quote .text::text')
-for quote in quotes:
-    print(quote.clean())
-```
-
-### Decision Flow
-
-1. Start with `Fetcher` for speed - most sites work with HTTP/3 + TLS fingerprinting
-2. Upgrade to `DynamicFetcher` if JavaScript rendering is required
-3. Use `StealthyFetcher` when facing Cloudflare Turnstile or device fingerprinting
-
-### Installation
-
-```bash
-# Core only (parser engine)
-pip install scrapling
-
-# With fetchers (includes curl_cffi, playwright, camoufox)
-pip install "scrapling[fetchers]"
-scrapling install  # Download browsers
-
-# Everything (includes AI/MCP, shell features)
-pip install "scrapling[all]"
-```
+- **Parsing**: CSS selectors, XPath, BeautifulSoup-style, text/regex search
+- **Adaptive**: Automatically relocates elements when websites change structure
+- **Anti-Detection**: TLS fingerprinting, browser automation, Camoufox integration
+- **Async**: Concurrent request handling
 
 ---
 
-## Skill Reference Table
+## Reference
 
-| Skill | User-Invocable | Namespace | Description |
-|-------|----------------|-----------|-------------|
-| `mwclient` | Yes | - | Main MediaWiki API client |
-| `mwclient:site` | Yes | `site` | Site connection & authentication |
-| `mwclient:page` | Yes | `page` | Page read/edit operations |
-| `mwclient:images` | Yes | `images` | File upload/download operations |
-| `mwclient:listing` | Yes | `listing` | Pagination and list iteration |
-| `mwclient:errors` | Yes | `errors` | Exception handling |
-| `scrapling` | Yes | `scrapling` | Web scraping library |
-
----
-
-## Usage in Claude Code
-
-To use a skill, reference it by name:
-
-```
-/mwclient
-/scrapling
-```
-
-Or use sub-skills directly:
-
-```
-/mwclient:site
-/mwclient:page
-/mwclient:errors
-```
-
----
-
-## Resources
-
-- **mwclient Documentation:** https://mwclient.readthedocs.io
-- **mwclient Source:** https://github.com/mwclient/mwclient
-- **Scrapling Repository:** https://github.com/d4sein/Scrapling
+| Skill | Invocation |
+|-------|------------|
+| mwclient | `/mwclient` |
+| mwclient:site | `/mwclient:site` |
+| mwclient:page | `/mwclient:page` |
+| mwclient:images | `/mwclient:images` |
+| mwclient:listing | `/mwclient:listing` |
+| mwclient:errors | `/mwclient:errors` |
+| scrapling | `/scrapling` |
