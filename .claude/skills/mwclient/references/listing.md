@@ -1,20 +1,8 @@
----
-name: listing
-description: |
-    Work with mwclient's lazy pagination and listing infrastructure.
-    covers List, GeneratorList, PageList, PageProperty classes, continuation tokens,
-    api_chunk_size vs max_items, and namespace-dispatched iteration.
-
-    Use when: iterating over large result sets, configuring pagination, or understanding
-    generator vs non-generator listing modes.
-user-invocable: true
----
-
-# Listing and Pagination Skill
+# Listing and Pagination
 
 ## Overview
 
-This skill covers the listing infrastructure in mwclient, which provides lazy, paginated iteration over MediaWiki API query results. All listing methods return iterator objects that fetch data in chunks as needed.
+This reference covers the listing infrastructure in mwclient, which provides lazy, paginated iteration over MediaWiki API query results. All listing methods return iterator objects that fetch data in chunks as needed.
 
 **Key Files:**
 

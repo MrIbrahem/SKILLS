@@ -1,20 +1,8 @@
----
-name: errors
-description: |
-    Handle mwclient exceptions and error conditions.
-    Covers the exception hierarchy (MwClientError, APIError, EditError, LoginError,
-    InsufficientPermission, ProtectedPageError, etc.) and proper catching patterns.
-
-    Use when: troubleshooting failures, implementing error handling, or distinguishing
-    between permission errors, edit conflicts, and API errors.
-user-invocable: true
----
-
-# Error Handling Skill
+# Error Handling
 
 ## Overview
 
-This skill covers exception handling in mwclient. All mwclient-specific exceptions inherit from `MwClientError`, which extends Python's built-in `RuntimeError`. This allows catching all library errors with a single `except MwClientError` clause.
+This reference covers exception handling in mwclient. All mwclient-specific exceptions inherit from `MwClientError`, which extends Python's built-in `RuntimeError`. This allows catching all library errors with a single `except MwClientError` clause.
 
 **Key Files:**
 

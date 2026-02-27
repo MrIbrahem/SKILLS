@@ -1,20 +1,8 @@
----
-name: images
-description: |
-    Work with mwclient Image objects and file upload functionality.
-    Covers image metadata (imageinfo), file history, usage tracking, downloading,
-    and uploading via Site.upload() including chunked uploads and stash mode.
-
-    Use when: downloading files, checking file metadata, finding duplicate files,
-    uploading images, or checking where files are used.
-user-invocable: true
----
-
-# Image/File Operations Skill
+# Image/File Operations
 
 ## Overview
 
-This skill covers the `Image` class and file upload functionality in mwclient. The `Image` class extends `Page` to handle file metadata, history, usage, and download operations. Uploading is handled via `Site.upload()`.
+This reference covers the `Image` class and file upload functionality in mwclient. The `Image` class extends `Page` to handle file metadata, history, usage, and download operations. Uploading is handled via `Site.upload()`.
 
 **Key Files:**
 
@@ -170,8 +158,7 @@ site.upload(
 ### Upload Modes
 
 1. **Direct upload** - Small files uploaded in single request
-2. **Chunked upload** - Large files (>
-   chunk_size, default 1 MiB) uploaded in chunks
+2. **Chunked upload** - Large files (> chunk_size, default 1 MiB) uploaded in chunks
 3. **Stash mode** - Upload bytes without publishing (two-phase workflow)
 4. **URL upload** - Server fetches from provided URL
 5. **From stash** - Finalize previously stashed upload

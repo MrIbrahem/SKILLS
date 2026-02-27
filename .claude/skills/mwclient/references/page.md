@@ -1,20 +1,8 @@
----
-name: page
-description: |
-    Work with mwclient Page objects for reading, editing, and managing wiki pages.
-    Covers text retrieval, revision history, editing (edit/append/prepend), page management
-    (move/delete/purge), backlinks, categories, and redirect resolution.
-
-    Use when: reading page content, making edits, querying page relationships, or handling
-    page metadata and permissions.
-user-invocable: true
----
-
-# Page Operations Skill
+# Page Operations
 
 ## Overview
 
-This skill covers the `Page` class in mwclient, which represents a single wiki page. The `Page` class provides methods for reading content, making edits, and querying page relationships.
+This reference covers the `Page` class in mwclient, which represents a single wiki page. The `Page` class provides methods for reading content, making edits, and querying page relationships.
 
 **Key Files:**
 

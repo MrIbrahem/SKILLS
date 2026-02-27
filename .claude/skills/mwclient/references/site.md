@@ -1,20 +1,8 @@
----
-name: site
-description: |
-    Work with mwclient Site objects for connecting to and interacting with MediaWiki instances.
-    Covers connection setup, authentication (OAuth, HTTP Basic, clientlogin, legacy login),
-    site-level listings, token management, and core API methods.
-
-    Use when: connecting to a wiki, authenticating, querying site metadata, or performing
-    site-level operations like search and recent changes.
-user-invocable: true
----
-
-# Site Operations Skill
+# Site Operations
 
 ## Overview
 
-This skill covers the `Site` class in mwclient, the central class for interacting with MediaWiki instances. Every operation — reading pages, making edits, uploading files, or querying lists — begins with constructing a `Site` instance.
+This reference covers the `Site` class in mwclient, the central class for interacting with MediaWiki instances. Every operation — reading pages, making edits, uploading files, or querying lists — begins with constructing a `Site` instance.
 
 **Key Files:**
 

@@ -40,15 +40,15 @@ site.login('username', 'password')
 page.edit('New content', summary='Updated via mwclient')
 ```
 
-## Sub-Skills
+## References
 
-| Skill               | Description                                             |
-| ------------------- | ------------------------------------------------------- |
-| [site](site/)       | Site connection, authentication, and site-level queries |
-| [page](page/)       | Page operations: read, edit, move, delete, listings     |
-| [images](images/)   | File/image operations: download, upload, metadata       |
-| [listing](listing/) | Pagination and iteration over API results               |
-| [errors](errors/)   | Exception handling and error types                      |
+| Reference                        | Description                                             |
+| -------------------------------- | ------------------------------------------------------- |
+| [site](references/site.md)       | Site connection, authentication, and site-level queries |
+| [page](references/page.md)       | Page operations: read, edit, move, delete, listings     |
+| [images](references/images.md)   | File/image operations: download, upload, metadata       |
+| [listing](references/listing.md) | Pagination and iteration over API results               |
+| [errors](references/errors.md)   | Exception handling and error types                      |
 
 ## Core Concepts
 
