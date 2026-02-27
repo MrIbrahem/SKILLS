@@ -15,9 +15,15 @@ A collection of Claude Code skills for specialized tasks.
 │       ├── listing.md   # Pagination & iteration
 │       └── errors.md    # Exception handling
 ├── scrapling/           # Web scraping library
-│   ├── SKILL.md
-│   ├── reference.md
-│   └── examples.md
+│   ├── SKILL.md         # Entry point + quick start
+│   ├── reference.md     # API reference
+│   ├── examples.md      # Extended examples
+│   └── references/
+│       ├── static_fetcher.md   # HTTP fetcher
+│       ├── dynamic_fetcher.md  # Browser automation
+│       ├── stealthy_fetcher.md # Anti-bot protection
+│       ├── sessions.md         # Session management
+│       └── adaptive_parsing.md # Resilient element relocation
 └── skill-writers/       # Skill creation & optimization
     └── SKILL.md
 ```
