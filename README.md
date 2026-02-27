@@ -22,10 +22,10 @@ A collection of Claude Code skills for specialized tasks.
 
 ## Skill Overview
 
-| Skill         | Type       | Purpose                                        |
-| ------------- | ---------- | ---------------------------------------------- |
-| **mwclient**  | Parent     | Interact with MediaWiki APIs (Wikipedia, etc.) |
-| **scrapling** | Standalone | Web scraping with anti-bot protection          |
+| Skill         | Purpose                                        |
+| ------------- | ---------------------------------------------- |
+| **mwclient**  | Interact with MediaWiki APIs (Wikipedia, etc.) |
+| **scrapling** | Web scraping with anti-bot protection          |
 
 ---
 
