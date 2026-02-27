@@ -6,18 +6,14 @@ A collection of Claude Code skills for specialized tasks.
 
 ```
 .claude/skills/
-├── mwclient/            # MediaWiki API client (parent skill)
-│   └── SKILL.md
-├── mwclient-site/       # Site connection & authentication
-│   └── SKILL.md
-├── mwclient-page/       # Page operations
-│   └── SKILL.md
-├── mwclient-images/     # File/image operations
-│   └── SKILL.md
-├── mwclient-listing/    # Pagination & iteration
-│   └── SKILL.md
-├── mwclient-errors/     # Exception handling
-│   └── SKILL.md
+├── mwclient/            # MediaWiki API client
+│   ├── SKILL.md         # Entry point + routing table
+│   └── references/
+│       ├── site.md      # Site connection & authentication
+│       ├── page.md      # Page operations
+│       ├── images.md    # File/image operations
+│       ├── listing.md   # Pagination & iteration
+│       └── errors.md    # Exception handling
 └── Scrapling/           # Web scraping library
     ├── SKILL.md
     ├── reference.md
@@ -62,14 +58,19 @@ A standalone skill for web scraping with multiple fetcher strategies.
 
 ---
 
-## Sub-skill Map
+## Skill Invocation
 
-| Sub-skill        | Invocation          | When to use                                               |
-| ---------------- | ------------------- | --------------------------------------------------------- |
-| mwclient         | `/mwclient`         | Overview, installation, common patterns                   |
-| mwclient-site    | `/mwclient:site`    | Connecting to a site, login, auth, session setup          |
-| mwclient-page    | `/mwclient:page`    | Reading & editing pages, get wikitext, save, move, delete |
-| mwclient-images  | `/mwclient:images`  | Images & file uploads, download, get image info           |
-| mwclient-listing | `/mwclient:listing` | Listings & iterators, categories, search, recent changes  |
-| mwclient-errors  | `/mwclient:errors`  | Error handling, catching and recovering from exceptions   |
-| scrapling        | `/scrapling`        | Web scraping, bypassing anti-bot protection               |
+| Skill     | Invocation   | When to use                                               |
+| --------- | ------------ | --------------------------------------------------------- |
+| mwclient  | `/mwclient`  | MediaWiki API operations, installation, common patterns   |
+| scrapling | `/scrapling` | Web scraping, bypassing anti-bot protection               |
+
+## mwclient References
+
+| Reference        | When to use                                               |
+| ---------------- | --------------------------------------------------------- |
+| [site](.claude/skills/mwclient/references/site.md)       | Connecting to a site, login, auth, session setup          |
+| [page](.claude/skills/mwclient/references/page.md)       | Reading & editing pages, get wikitext, save, move, delete |
+| [images](.claude/skills/mwclient/references/images.md)   | Images & file uploads, download, get image info           |
+| [listing](.claude/skills/mwclient/references/listing.md) | Listings & iterators, categories, search, recent changes  |
+| [errors](.claude/skills/mwclient/references/errors.md)   | Error handling, catching and recovering from exceptions   |
