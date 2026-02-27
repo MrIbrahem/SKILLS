@@ -14,7 +14,7 @@ A collection of Claude Code skills for specialized tasks.
 │       ├── images.md    # File/image operations
 │       ├── listing.md   # Pagination & iteration
 │       └── errors.md    # Exception handling
-├── Scrapling/           # Web scraping library
+├── scrapling/           # Web scraping library
 │   ├── SKILL.md
 │   ├── reference.md
 │   └── examples.md
