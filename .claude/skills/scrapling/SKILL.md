@@ -409,6 +409,11 @@ For detailed API reference, advanced options, and complete examples:
 
 -   See [reference.md](reference.md) for comprehensive API documentation
 -   See [examples.md](examples.md) for extended use cases and patterns
+-   See [references/static_fetcher.md](references/static_fetcher.md) for detailed HTTP fetcher documentation
+-   See [references/dynamic_fetcher.md](references/dynamic_fetcher.md) for browser automation details
+-   See [references/stealthy_fetcher.md](references/stealthy_fetcher.md) for anti-bot protection features
+-   See [references/sessions.md](references/sessions.md) for session management and proxy rotation
+-   See [references/adaptive_parsing.md](references/adaptive_parsing.md) for resilient element relocation
 
 ## Key Capabilities
 
