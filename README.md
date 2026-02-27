@@ -14,18 +14,21 @@ A collection of Claude Code skills for specialized tasks.
 │       ├── images.md    # File/image operations
 │       ├── listing.md   # Pagination & iteration
 │       └── errors.md    # Exception handling
-└── Scrapling/           # Web scraping library
-    ├── SKILL.md
-    ├── reference.md
-    └── examples.md
+├── Scrapling/           # Web scraping library
+│   ├── SKILL.md
+│   ├── reference.md
+│   └── examples.md
+└── skill-writers/       # Skill creation & optimization
+    └── SKILL.md
 ```
 
 ## Skill Overview
 
-| Skill         | Purpose                                        |
-| ------------- | ---------------------------------------------- |
-| **mwclient**  | Interact with MediaWiki APIs (Wikipedia, etc.) |
-| **scrapling** | Web scraping with anti-bot protection          |
+| Skill           | Purpose                                        |
+| --------------- | ---------------------------------------------- |
+| **mwclient**    | Interact with MediaWiki APIs (Wikipedia, etc.) |
+| **scrapling**   | Web scraping with anti-bot protection          |
+| **skill-writers** | Create, edit, and optimize skills            |
 
 ---
 
@@ -60,10 +63,11 @@ A standalone skill for web scraping with multiple fetcher strategies.
 
 ## Skill Invocation
 
-| Skill     | Invocation   | When to use                                               |
-| --------- | ------------ | --------------------------------------------------------- |
-| mwclient  | `/mwclient`  | MediaWiki API operations, installation, common patterns   |
-| scrapling | `/scrapling` | Web scraping, bypassing anti-bot protection               |
+| Skill         | Invocation       | When to use                                               |
+| ------------- | ---------------- | --------------------------------------------------------- |
+| mwclient      | `/mwclient`      | MediaWiki API operations, installation, common patterns   |
+| scrapling     | `/scrapling`     | Web scraping, bypassing anti-bot protection               |
+| skill-writers | `/skill-writers` | Create, edit, or optimize skills                          |
 
 ## mwclient References
 
@@ -74,3 +78,25 @@ A standalone skill for web scraping with multiple fetcher strategies.
 | [images](.claude/skills/mwclient/references/images.md)   | Images & file uploads, download, get image info           |
 | [listing](.claude/skills/mwclient/references/listing.md) | Listings & iterators, categories, search, recent changes  |
 | [errors](.claude/skills/mwclient/references/errors.md)   | Error handling, catching and recovering from exceptions   |
+
+---
+
+## skill-writers
+
+A skill for creating new skills and iteratively improving them.
+
+| Capability              | Description                                              |
+| ----------------------- | -------------------------------------------------------- |
+| **Skill Creation**      | Draft skills from scratch, capture user workflows        |
+| **Testing**             | Run evals, benchmark performance, compare iterations     |
+| **Optimization**        | Improve descriptions for better triggering accuracy      |
+| **Packaging**           | Bundle skills for distribution                           |
+
+### Workflow
+
+1. **Capture Intent** — Understand what the skill should do
+2. **Draft** — Write the SKILL.md with frontmatter and instructions
+3. **Test** — Run test prompts with and without the skill
+4. **Evaluate** — Review outputs, grade assertions, analyze benchmarks
+5. **Iterate** — Improve based on feedback and repeat
+6. **Optimize** — Tune the description for reliable triggering
