@@ -27,13 +27,14 @@ When helping users with Scrapling, follow these steps:
 
 Scrapling provides three fetcher types for different scenarios:
 
-| Fetcher | Use When | Import |
-|---------|----------|--------|
-| `Fetcher` / `AsyncFetcher` | Static HTML, APIs, simple sites | `from scrapling import Fetcher` |
-| `DynamicFetcher` / `AsyncDynamicFetcher` | JavaScript-heavy sites, need real browser | `from scrapling import DynamicFetcher` |
-| `StealthyFetcher` / `AsyncStealthyFetcher` | Cloudflare, advanced anti-bot systems | `from scrapling import StealthyFetcher` |
+| Fetcher                                    | Use When                                  | Import                                  |
+| ------------------------------------------ | ----------------------------------------- | --------------------------------------- |
+| `Fetcher` / `AsyncFetcher`                 | Static HTML, APIs, simple sites           | `from scrapling import Fetcher`         |
+| `DynamicFetcher` / `AsyncDynamicFetcher`   | JavaScript-heavy sites, need real browser | `from scrapling import DynamicFetcher`  |
+| `StealthyFetcher` / `AsyncStealthyFetcher` | Cloudflare, advanced anti-bot systems     | `from scrapling import StealthyFetcher` |
 
 **Decision flow:**
+
 1. Start with `Fetcher` for speed - most sites work with HTTP/3 + TLS fingerprinting
 2. Upgrade to `DynamicFetcher` if JavaScript rendering is required
 3. Use `StealthyFetcher` when facing Cloudflare Turnstile or device fingerprinting
@@ -188,29 +189,33 @@ pip install "scrapling[all]"
 
 ## Requirements
 
-- Python 3.10+
-- For browser features: `scrapling install` after package installation
+-   Python 3.10+
+-   For browser features: `scrapling install` after package installation
 
 ## Advanced Usage
 
 For detailed API reference, advanced options, and complete examples:
-- See [reference.md](reference.md) for comprehensive API documentation
-- See [examples.md](examples.md) for extended use cases and patterns
+
+-   See [reference.md](reference.md) for comprehensive API documentation
+-   See [examples.md](examples.md) for extended use cases and patterns
 
 ## Key Capabilities
 
 **Fetching:**
-- HTTP/1.1, HTTP/2, HTTP/3 with TLS fingerprinting
-- Browser automation via Playwright/Patchright
-- Camoufox anti-detection (Cloudflare solver)
-- Session management with browser tab pools
+
+-   HTTP/1.1, HTTP/2, HTTP/3 with TLS fingerprinting
+-   Browser automation via Playwright/Patchright
+-   Camoufox anti-detection (Cloudflare solver)
+-   Session management with browser tab pools
 
 **Parsing:**
-- CSS, XPath, BeautifulSoup-style, text/regex search
-- Scrapy-compatible pseudo-elements (`::text`, `::attr()`)
-- Adaptive element relocation via similarity scoring
+
+-   CSS, XPath, BeautifulSoup-style, text/regex search
+-   Scrapy-compatible pseudo-elements (`::text`, `::attr()`)
+-   Adaptive element relocation via similarity scoring
 
 **Performance:**
-- Outperforms BeautifulSoup, MechanicalSoup, Selectolax
-- `orjson` for 10x faster JSON serialization
-- 92% test coverage with full type hints
+
+-   Outperforms BeautifulSoup, MechanicalSoup, Selectolax
+-   `orjson` for 10x faster JSON serialization
+-   92% test coverage with full type hints
