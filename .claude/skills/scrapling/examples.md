@@ -12,6 +12,7 @@ Extended examples and use cases for Scrapling.
 6. [Adaptive Parsing Workflows](#adaptive-parsing-workflows)
 7. [Concurrent Scraping](#concurrent-scraping)
 8. [Data Export Patterns](#data-export-patterns)
+9. [Error Handling](#error-handling)
 
 ---
 
@@ -145,6 +146,31 @@ def scrape_product_pages(base_url, max_pages=5):
     return all_products
 ```
 
+### Amazon Product Scraping (Protected Site)
+
+```python
+from scrapling import StealthyFetcher
+
+def scrape_amazon_product(url):
+    # Use StealthyFetcher to bypass protection
+    page = StealthyFetcher.fetch(url)
+
+    # Extract product details
+    return {
+        'title': page.css_first('#productTitle::text').get().clean(),
+        'price': page.css_first('.a-price .a-offscreen::text').get(),
+        'rating': page.css_first('[data-feature-name="averageCustomerReviews"] .a-popover-trigger .a-color-base::text').get(),
+        'reviews_count': page.css_first('#acrCustomerReviewText::text').re_first(r'[\d,]+'),
+        'features': [
+            li.get().clean() for li in page.css('#feature-bullets li span::text')
+        ],
+        'availability': page.css_first('#availability').get_all_text(strip=True),
+        'images': [
+            img.attrib['src'] for img in page.css('#altImages img')
+        ]
+    }
+```
+
 ---
 
 ## Authentication & Sessions
@@ -195,6 +221,35 @@ page = Fetcher.get(
 )
 ```
 
+### Browser Session with Cookie Persistence
+
+```python
+from scrapling import DynamicSession
+
+with DynamicSession(
+    headless=True,
+    disable_resources=True,
+    real_chrome=True
+) as session:
+    # Login through browser
+    login_page = session.fetch('https://example.com/login')
+
+    def do_login(page):
+        page.fill('input[name="username"]', 'myuser')
+        page.fill('input[name="password"]', 'mypassword')
+        page.click('button[type="submit"]')
+        page.wait_for_selector('.dashboard')
+        return page
+
+    dashboard = session.fetch(
+        'https://example.com/login',
+        page_action=do_login
+    )
+
+    # Subsequent requests maintain cookies
+    profile = session.fetch('https://example.com/profile')
+```
+
 ---
 
 ## Anti-Bot Bypass
@@ -207,10 +262,10 @@ from scrapling import StealthyFetcher
 page = StealthyFetcher.fetch(
     'https://protected-site.com',
     solve_cloudflare=True,
-    humanize=True,
-    geoip=True,
+    block_webrtc=True,
+    real_chrome=True,
     headless=True,
-    block_webrtc=True
+    timeout=60000  # 60 seconds for Cloudflare
 )
 
 # Check if bypass successful
@@ -219,7 +274,7 @@ if page.status == 200:
     print(f"Successfully fetched {len(content)} characters")
 ```
 
-### Stealth Mode with Custom Fingerprint
+### Stealth Mode with Full Protection
 
 ```python
 from scrapling import StealthyFetcher
@@ -227,11 +282,12 @@ from scrapling import StealthyFetcher
 page = StealthyFetcher.fetch(
     'https://bot-check.example.com',
     solve_cloudflare=True,
-    humanize=True,
-    os='windows',           # Windows fingerprint
-    block_images=True,      # Faster loading
-    disable_ads=True,       # Block ads
-    google_search=True      # Simulate from Google
+    block_webrtc=True,
+    hide_canvas=True,
+    real_chrome=True,
+    headless=True,
+    google_search=True,
+    proxy='http://username:password@host:port'
 )
 
 # Verify stealth
@@ -243,26 +299,40 @@ print(f"Detected as: {user_agent}")
 
 ```python
 from scrapling import StealthyFetcher
-import random
+from scrapling.fetchers import ProxyRotator
 
-proxies = [
-    'http://user:pass@proxy1.com:8080',
-    'http://user:pass@proxy2.com:8080',
-    'http://user:pass@proxy3.com:8080',
-]
+# Set up proxy rotation
+rotator = ProxyRotator([
+    "http://proxy1:8080",
+    "http://proxy2:8080",
+    "http://proxy3:8080",
+])
 
-for url in urls_to_scrape:
-    proxy = random.choice(proxies)
+# Use with session
+with StealthyFetcher.session(proxy_rotator=rotator, headless=True) as session:
+    page1 = session.fetch('https://example1.com')
+    page2 = session.fetch('https://example2.com')
 
-    page = StealthyFetcher.fetch(
-        url,
-        proxy=proxy,
-        solve_cloudflare=True,
-        humanize=True,
-        geoip=True  # Auto-match timezone to proxy location
-    )
+    # Override rotator for specific request
+    page3 = session.fetch('https://example3.com', proxy='http://specific-proxy:8080')
+```
 
-    # Process page...
+### Stealthy Session with Multiple Protections
+
+```python
+from scrapling import StealthySession
+
+with StealthySession(
+    headless=True,
+    real_chrome=True,
+    block_webrtc=True,
+    solve_cloudflare=True,
+    timeout=60000
+) as session:
+    # Make multiple requests with the same browser instance
+    page1 = session.fetch('https://example1.com')
+    page2 = session.fetch('https://example2.com')
+    page3 = session.fetch('https://nopecha.com/demo/cloudflare')
 ```
 
 ---
@@ -273,8 +343,9 @@ for url in urls_to_scrape:
 
 ```python
 from scrapling import DynamicFetcher
+from playwright.sync_api import Page
 
-def fill_and_submit_form(page):
+def fill_and_submit_form(page: Page):
     # Fill form fields
     page.fill('input[name="firstname"]', 'John')
     page.fill('input[name="lastname"]', 'Doe')
@@ -309,8 +380,9 @@ print(f"Result: {confirmation}")
 
 ```python
 from scrapling import DynamicFetcher
+from playwright.sync_api import Page
 
-def scroll_to_bottom(page):
+def scroll_to_bottom(page: Page):
     # Get initial height
     last_height = page.evaluate('() => document.body.scrollHeight')
 
@@ -341,12 +413,58 @@ items = page.css('.scroll-item')
 print(f"Total items: {len(items)}")
 ```
 
-### Screenshot and PDF Generation
+### Mouse Automation
+
+```python
+from scrapling import DynamicFetcher
+from playwright.sync_api import Page
+
+def scroll_page(page: Page):
+    page.mouse.wheel(10, 0)
+    page.mouse.move(100, 400)
+    page.mouse.up()
+    return page
+
+page = DynamicFetcher.fetch(
+    'https://example.com',
+    page_action=scroll_page
+)
+```
+
+### Wait Conditions
 
 ```python
 from scrapling import DynamicFetcher
 
-def take_screenshot(page):
+# Wait for specific selector to be visible
+page = DynamicFetcher.fetch(
+    'https://example.com',
+    wait_selector='.content',
+    wait_selector_state='visible'
+)
+
+# Wait for element to be removed
+page = DynamicFetcher.fetch(
+    'https://example.com',
+    wait_selector='.loading-spinner',
+    wait_selector_state='detached'
+)
+
+# Combined with network idle
+page = DynamicFetcher.fetch(
+    'https://example.com',
+    network_idle=True,
+    wait_selector='h1'
+)
+```
+
+### Screenshot and PDF Generation
+
+```python
+from scrapling import DynamicFetcher
+from playwright.sync_api import Page
+
+def take_screenshot(page: Page):
     page.screenshot(path='screenshot.png', full_page=True)
     return page
 
@@ -354,6 +472,33 @@ page = DynamicFetcher.fetch(
     'https://example.com',
     headless=True,
     page_action=take_screenshot
+)
+```
+
+### Downloading Files
+
+```python
+from scrapling import Fetcher
+
+# Static file download
+page = Fetcher.get('https://raw.githubusercontent.com/D4Vinci/Scrapling/main/images/main_cover.png')
+with open(file='main_cover.png', mode='wb') as f:
+    f.write(page.body)
+
+# Dynamic file download
+from scrapling import DynamicFetcher
+from playwright.sync_api import Page
+
+def download_file(page: Page):
+    with page.expect_download() as download_info:
+        page.click('a#download-link')
+    download = download_info.value
+    download.save_as('/path/to/save/file.pdf')
+    return page
+
+page = DynamicFetcher.fetch(
+    'https://example.com/download-page',
+    page_action=download_file
 )
 ```
 
@@ -367,7 +512,7 @@ page = DynamicFetcher.fetch(
 from scrapling import StealthyFetcher
 
 # Enable adaptive parsing globally
-StealthyFetcher.auto_match = True
+StealthyFetcher.adaptive = True
 
 # First scrape - save element properties
 page = StealthyFetcher.fetch('https://example.com/products')
@@ -388,7 +533,7 @@ for product in products:
 ```python
 from scrapling import StealthyFetcher
 
-StealthyFetcher.auto_match = True
+StealthyFetcher.adaptive = True
 
 # Later, after website redesign changes CSS classes...
 page = StealthyFetcher.fetch('https://example.com/products')
@@ -479,6 +624,30 @@ urls = ['https://site1.com', 'https://site2.com', 'https://site3.com']
 results = asyncio.run(scrape_multiple(urls))
 ```
 
+### Async Stealthy Session
+
+```python
+import asyncio
+from scrapling import AsyncStealthySession
+
+async def scrape_protected_sites():
+    async with AsyncStealthySession(
+        real_chrome=True,
+        block_webrtc=True,
+        solve_cloudflare=True,
+        timeout=60000,
+        max_pages=3
+    ) as session:
+        pages = await asyncio.gather(
+            session.fetch('https://site1.com'),
+            session.fetch('https://site2.com'),
+            session.fetch('https://protected-site.com')
+        )
+        return pages
+
+results = asyncio.run(scrape_protected_sites())
+```
+
 ---
 
 ## Data Export Patterns
@@ -549,7 +718,7 @@ with open('article.md', 'w') as f:
 
 ---
 
-## Error Handling Patterns
+## Error Handling
 
 ### Graceful Degradation
 
@@ -597,4 +766,64 @@ async def fetch_with_retry(url, max_retries=3):
             await asyncio.sleep(wait_time)
 
     return None
+```
+
+### Handling Missing Elements
+
+```python
+from scrapling import Fetcher
+
+page = Fetcher.get('https://example.com')
+
+# Use default parameter
+price = page.css_first('.price::text', default='N/A')
+
+# Or check if element exists
+price_elem = page.css_first('.price')
+if price_elem:
+    price = price_elem.text
+else:
+    price = 'Not available'
+
+# Check collection length
+products = page.css('.product')
+if len(products) == 0:
+    print("No products found")
+```
+
+### Pagination with Error Handling
+
+```python
+from scrapling import Fetcher
+
+def scrape_all_pages(base_url):
+    page_num = 1
+    all_products = []
+
+    while True:
+        try:
+            url = f"{base_url}?page={page_num}"
+            page = Fetcher.get(url, timeout=30)
+
+            if page.status != 200:
+                print(f"Failed to fetch page {page_num}: {page.status}")
+                break
+
+            products = page.css('.product')
+            if not products:
+                break
+
+            for product in products:
+                all_products.append({
+                    'name': product.css_first('.name::text', default=''),
+                    'price': product.css_first('.price::text', default=''),
+                })
+
+            page_num += 1
+
+        except Exception as e:
+            print(f"Error on page {page_num}: {e}")
+            break
+
+    return all_products
 ```
