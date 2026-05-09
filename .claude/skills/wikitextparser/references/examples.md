@@ -54,7 +54,7 @@ def extract_infobox(wikitext: str, template_name: str = None) -> dict:
     """
     parsed = wtp.parse(wikitext)
     for t in parsed.templates:
-        name = t.normal_name(code='en').lower()
+        name = t.normal_name().lower()
         if template_name is None or template_name.lower() in name:
             return {
                 arg.name.strip(): arg.value.strip()
@@ -80,7 +80,7 @@ def rename_template_arg(wikitext: str, template: str, old_arg: str, new_arg: str
     """Rename an argument across all instances of a template."""
     parsed = wtp.parse(wikitext)
     for t in parsed.templates:
-        if t.normal_name(code='en').lower() == template.lower():
+        if t.normal_name().lower() == template.lower():
             arg = t.get_arg(old_arg)
             if arg:
                 value = arg.value
@@ -200,7 +200,7 @@ def find_duplicate_args(wikitext: str) -> list[dict]:
         for name, count in counts.items():
             if count > 1:
                 duplicates.append({
-                    'template': t.normal_name(code='en'),
+                    'template': t.normal_name(),
                     'arg': name,
                     'count': count,
                 })
@@ -300,7 +300,7 @@ def validate_templates(wikitext: str) -> list[dict]:
     parsed = wtp.parse(wikitext)
     issues = []
     for t in parsed.templates:
-        name = t.normal_name(code='en').lower()
+        name = t.normal_name().lower()
         required = REQUIRED_FIELDS.get(name)
         if not required:
             continue
@@ -346,7 +346,7 @@ def pretty_print_templates(wikitext: str) -> str:
     parsed = wtp.parse(wikitext)
     lines = []
     for i, t in enumerate(parsed.templates, 1):
-        lines.append(f"=== Template {i}: {t.normal_name(code='en')} ===")
+        lines.append(f"=== Template {i}: {t.normal_name()} ===")
         lines.append(t.pformat())
         lines.append('')
     return '\n'.join(lines)
@@ -364,7 +364,7 @@ def find_templates_inside(wikitext: str, outer_name: str) -> list:
     parsed = wtp.parse(wikitext)
     results = []
     for t in parsed.templates:
-        if t.normal_name(code='en').lower() == outer_name.lower():
+        if t.normal_name().lower() == outer_name.lower():
             # templates property on a Template returns its nested templates
             results.extend(t.templates)
     return results
@@ -375,10 +375,10 @@ def which_template_contains(wikitext: str, target_name: str) -> list[str]:
     parsed = wtp.parse(wikitext)
     containers = []
     for t in parsed.templates:
-        if t.normal_name(code='en').lower() == target_name.lower():
+        if t.normal_name().lower() == target_name.lower():
             parent = t.parent(type_='Template')
             if parent:
-                containers.append(parent.normal_name(code='en'))
+                containers.append(parent.normal_name())
     return containers
 ```
 

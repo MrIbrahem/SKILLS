@@ -67,7 +67,7 @@ t.rm_dup_args_safe()
 t.rm_first_of_dup_args()
 
 # Normalized template name (strips namespace, underscores, etc.)
-t.normal_name(code='en')
+t.normal_name()
 ```
 
 ### Template Parameters (`{{{param}}}`)
