@@ -1,13 +1,13 @@
 ---
 name: wikitextparser
 description: >
-  Parse, extract, and manipulate MediaWiki wikitext using the wikitextparser Python library.
-  Use this skill whenever the user wants to work with wikitext, Wikipedia markup, or MediaWiki
-  content — including extracting templates, wikilinks, tables, sections, lists, tags, or
-  parser functions; modifying wikitext structure; cleaning markup; or building any pipeline
-  that reads or writes MediaWiki-formatted text. Trigger even for partial tasks like
-  "get all templates from this wiki page", "extract table data", "find wikilinks", or
-  "remove markup from wikitext".
+    Parse, extract, and manipulate MediaWiki wikitext using the wikitextparser Python library.
+    Use this skill whenever the user wants to work with wikitext, Wikipedia markup, or MediaWiki
+    content — including extracting templates, wikilinks, tables, sections, lists, tags, or
+    parser functions; modifying wikitext structure; cleaning markup; or building any pipeline
+    that reads or writes MediaWiki-formatted text. Trigger even for partial tasks like
+    "get all templates from this wiki page", "extract table data", "find wikilinks", or
+    "remove markup from wikitext".
 ---
 
 # WikiTextParser Skill
@@ -30,17 +30,17 @@ import wikitextparser as wtp
 
 ## Key Objects & How to Get Them
 
-| Object | How to access | Common use |
-|---|---|---|
-| `Template` | `parsed.templates` | Extract/modify template calls |
-| `WikiLink` | `parsed.wikilinks` | Extract/modify `[[links]]` |
-| `Section` | `parsed.sections` or `parsed.get_sections()` | Navigate headings |
-| `Table` | `parsed.tables` or `parsed.get_tables()` | Extract table data |
-| `WikiList` | `parsed.get_lists()` | Work with bullet/numbered lists |
-| `Tag` | `parsed.get_tags()` | Work with HTML/extension tags |
-| `ExternalLink` | `parsed.external_links` | Work with `[url text]` links |
-| `Parameter` | `parsed.parameters` | Work with `{{{param}}}` |
-| `Comment` | `parsed.comments` | Access `<!-- comments -->` |
+| Object         | How to access                                | Common use                      |
+| -------------- | -------------------------------------------- | ------------------------------- |
+| `Template`     | `parsed.templates`                           | Extract/modify template calls   |
+| `WikiLink`     | `parsed.wikilinks`                           | Extract/modify `[[links]]`      |
+| `Section`      | `parsed.sections` or `parsed.get_sections()` | Navigate headings               |
+| `Table`        | `parsed.tables` or `parsed.get_tables()`     | Extract table data              |
+| `WikiList`     | `parsed.get_lists()`                         | Work with bullet/numbered lists |
+| `Tag`          | `parsed.get_tags()`                          | Work with HTML/extension tags   |
+| `ExternalLink` | `parsed.external_links`                      | Work with `[url text]` links    |
+| `Parameter`    | `parsed.parameters`                          | Work with `{{{param}}}`         |
+| `Comment`      | `parsed.comments`                            | Access `<!-- comments -->`      |
 
 ---
 
@@ -261,6 +261,7 @@ str(parsed)    # '{{t|a=new}}'
 ```
 
 To delete a node:
+
 ```python
 del node[:]         # or
 del node.string
@@ -271,16 +272,19 @@ del node.string
 ## Common Patterns
 
 ### Extract all template names
+
 ```python
 [t.name.strip() for t in parsed.templates]
 ```
 
 ### Get all wikilinks pointing to a namespace
+
 ```python
 [wl for wl in parsed.wikilinks if wl.title.startswith('File:')]
 ```
 
 ### Replace template argument values
+
 ```python
 for t in parsed.templates:
     if t.normal_name() == 'Infobox person':
@@ -288,6 +292,7 @@ for t in parsed.templates:
 ```
 
 ### Extract table as list of dicts (with header row)
+
 ```python
 table = parsed.tables[0]
 rows = table.data()
@@ -296,6 +301,7 @@ records = [dict(zip(headers, row)) for row in rows[1:]]
 ```
 
 ### Strip all markup for plain-text search
+
 ```python
 plain = wtp.parse(wikitext).plain_text()
 ```
@@ -304,8 +310,8 @@ plain = wtp.parse(wikitext).plain_text()
 
 ## Known Limitations
 
-- Localized namespace names (e.g. `[[Archivo:...]]` for `[[File:...]]`) are treated as normal wikilinks — use Pywikibot for namespace resolution.
-- Parser functions and magic words are **not** evaluated.
-- Extension tag list is based on English Wikipedia; other wikis may differ.
-- No `ast.walk`-equivalent; use `.ancestors()` / `.parent()` to traverse.
-- Offline parsers can't resolve template contents — `[[{{template}}]]` is guessed as a wikilink.
+-   Localized namespace names (e.g. `[[Archivo:...]]` for `[[File:...]]`) are treated as normal wikilinks — use Pywikibot for namespace resolution.
+-   Parser functions and magic words are **not** evaluated.
+-   Extension tag list is based on English Wikipedia; other wikis may differ.
+-   No `ast.walk`-equivalent; use `.ancestors()` / `.parent()` to traverse.
+-   Offline parsers can't resolve template contents — `[[{{template}}]]` is guessed as a wikilink.
