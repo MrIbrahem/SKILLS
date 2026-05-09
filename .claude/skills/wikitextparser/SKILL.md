@@ -308,6 +308,11 @@ plain = wtp.parse(wikitext).plain_text()
 
 ---
 
+## Reference Files
+
+-   **`references/reference.md`** — Full documentation for all classes, methods, and properties with precise details. Read it when you need exact signatures or edge-case behavior.
+-   **`references/examples.md`** — 15 complete practical examples: extracting Infobox data, exporting tables to CSV, building a wikilink graph, auditing duplicates, and more. Read it when you need a ready-made script or multi-step workflow.
+
 ## Known Limitations
 
 -   Localized namespace names (e.g. `[[Archivo:...]]` for `[[File:...]]`) are treated as normal wikilinks — use Pywikibot for namespace resolution.
