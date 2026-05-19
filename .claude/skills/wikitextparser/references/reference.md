@@ -21,15 +21,16 @@ applies_to:
 2. [Template](#template)
 3. [Argument](#argument)
 4. [Parameter](#parameter)
-5. [WikiLink](#wikilink)
-6. [ExternalLink](#externallink)
-7. [Section](#section)
-8. [Table & Cell](#table--cell)
-9. [WikiList](#wikilist)
-10. [Tag](#tag)
-11. [Comment](#comment)
-12. [Bold & Italic](#bold--italic)
-13. [SubWikiText internals](#subwikitext-internals)
+5. [ParserFunction](#parserfunction)
+6. [WikiLink](#wikilink)
+7. [ExternalLink](#externallink)
+8. [Section](#section)
+9. [Table & Cell](#table--cell)
+10. [WikiList](#wikilist)
+11. [Tag](#tag)
+12. [Comment](#comment)
+13. [Bold & Italic](#bold--italic)
+14. [SubWikiText internals](#subwikitext-internals)
 
 ---
 
@@ -105,7 +106,9 @@ All kwargs default to `True` unless noted:
 -   `replace_external_links` — `[url text]` → `text`.
 -   `replace_wikilinks` — `[[a|b]]` → `b`, `[[a]]` → `a`.
 -   `unescape_html_entities` — `&amp;` → `&`.
--   `replace_bolds_and_italics` — strips `'''` and `''`.
+-   `replace_bolds_and_italics` — strips `'''` and `''`. **Deprecated alias** — prefer the granular flags below.
+-   `replace_bolds` — strips `'''…'''` only. Default `True`.
+-   `replace_italics` — strips `''…''` only. Default `True`.
 -   `replace_tables` — callable `Table → str|None`, or `True` (default converter), or `False`.
 
 #### `ancestors(type_=None)` / `parent(type_=None)`
@@ -216,6 +219,70 @@ Wraps current default in another parameter layer:
 ```
 
 No-op if `new_default_name` already appears among defaults.
+
+---
+
+## ParserFunction
+
+Inherits: `SubWikiTextWithArgs` → `SubWikiText` → `WikiText`
+
+Represents `{{#if:condition|then|else}}`, `{{#switch:…}}`, `{{ucfirst:…}}`, and
+other parser functions and magic words that use `:` as the first separator.
+
+### Properties
+
+| Property           | Type                    | Description                                                             |
+| ------------------ | ----------------------- | ----------------------------------------------------------------------- |
+| `name`             | `str`                   | Function name (e.g. `'#if'`, `'#switch'`, `'lc'`). Supports get/set.   |
+| `arguments`        | `list[Argument]`        | All arguments (first one is the condition/expression). Same as Template.|
+| `nesting_level`    | `int`                   | 0 = top-level; +1 per enclosing template/parser function.               |
+| `templates`        | `list[Template]`        | Templates nested inside this parser function.                            |
+| `parser_functions` | `list[ParserFunction]`  | Parser functions nested inside (excludes self).                          |
+
+### Methods
+
+All methods inherited from `SubWikiTextWithArgs` — same as Template:
+
+#### `get_arg(name) → Argument | None`
+
+Returns last argument with that name, or `None`.
+
+#### `set_arg(name, value, positional=None, before=None, after=None, preserve_spacing=False)`
+
+Same semantics as `Template.set_arg()`.
+
+#### `has_arg(name, value=None) → bool`
+
+#### `del_arg(name)`
+
+#### `get_lists(pattern=...)`
+
+Returns WikiList objects across all arguments.
+
+### Argument layout for common parser functions
+
+| Function      | `arguments[0]`         | `arguments[1]`  | `arguments[2]`   |
+| ------------- | ---------------------- | --------------- | ----------------- |
+| `#if`         | condition expression   | then-branch     | else-branch       |
+| `#ifeq`       | value A                | value B         | then / else       |
+| `#switch`     | expression             | `key=value` pairs (keyword args) | `#default=...` |
+| `#ifexist`    | page title             | then-branch     | else-branch       |
+| `#expr`       | math expression        | —               | —                 |
+| `lc` / `uc`   | text to transform      | —               | —                 |
+| `ucfirst`     | text to transform      | —               | —                 |
+
+### Disambiguation from Template
+
+The library distinguishes parser functions from templates by the presence of
+`:` as the first separator (instead of `|`). A template whose name contains a
+colon (e.g. `{{en:Article}}`) is still a `Template` if it has no `|`-separated
+args or if the colon is part of a known namespace prefix.
+
+### Key difference from Template
+
+- `pf.name` often starts with `#` (e.g. `'#if'`, `'#switch'`).
+- Magic words (`lc`, `uc`, `ucfirst`, `formatnum`, etc.) do **not** start with `#`.
+- The library does **not** evaluate parser functions — it only exposes the structure.
 
 ---
 
@@ -389,11 +456,28 @@ Represents `<!-- comment text -->`.
 
 ### Properties
 
-| Property | Type  | Description                                          |
-| -------- | ----- | ---------------------------------------------------- |
-| `text`   | `str` | Content without surrounding quote tokens. Read-only. |
+| Property | Type  | Description                                                     |
+| -------- | ----- | --------------------------------------------------------------- |
+| `text`   | `str` | Content without surrounding quote tokens. Supports get/**set**. |
 
-**Italic-specific:** `__init__` accepts `end_token=True/False` to handle cases where the italic doesn't end with `''`.
+Setting `b.text = 'new'` replaces the inner content between the quote tokens
+in-place — the surrounding `'''` / `''` delimiters are preserved.
+
+```python
+parsed = wtp.parse("This is '''important''' text")
+b = parsed.get_bolds()[0]
+b.text                 # 'important'
+b.text = 'critical'
+str(parsed)            # "This is '''critical''' text"
+```
+
+### Additional notes
+
+- **`Bold`** and **`Italic`** inherit from `SubWikiText` and share the root buffer.
+- `del b[:]` removes the bold/italic span (including the quote tokens) from the buffer.
+- `b[:] = 'replacement'` replaces the entire span (including quotes) with arbitrary text.
+- **Italic-specific:** `__init__` accepts `end_token=True/False` to handle cases where the italic doesn't end with `''` (unclosed italic at end-of-line).
+- **Bold-italic (`'''''text'''''`)** may appear as either Bold or Italic depending on parsing context. Use `get_bolds_and_italics()` to capture both.
 
 ---
 
