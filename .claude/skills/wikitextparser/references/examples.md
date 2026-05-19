@@ -1,3 +1,19 @@
+---
+name: wikitextparser-examples
+description: >
+  15+ end-to-end scripts demonstrating real-world wikitext processing
+  pipelines: parsing dumps, extracting infoboxes, building link graphs,
+  exporting tables to CSV, validating templates, auditing duplicates, and
+  cleaning markup for NLP. Load this file when a sub-skill or recipe points
+  you here for a full working script.
+applies_to:
+  - "end-to-end"
+  - "full script"
+  - "pipeline"
+  - "real-world"
+  - "workflow"
+---
+
 # wikitextparser — Practical Examples
 
 > Load this file when the user needs end-to-end scripts, real-world patterns, or multi-step workflows beyond quick snippets.

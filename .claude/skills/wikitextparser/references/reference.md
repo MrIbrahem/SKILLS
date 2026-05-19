@@ -1,3 +1,16 @@
+---
+name: wikitextparser-api-reference
+description: >
+  Complete API reference for all wikitextparser classes, methods, properties,
+  and edge-case behaviors. Load this file when a sub-skill points you here
+  for exact method signatures, return types, or obscure parameter details.
+applies_to:
+  - "API"
+  - "method signature"
+  - "full reference"
+  - "all classes"
+---
+
 # wikitextparser — Full API Reference
 
 > Load this file when you need complete method signatures, property details, or edge-case behavior not covered in SKILL.md.
