@@ -1,3 +1,21 @@
+---
+name: wikitextparser-examples
+description: >
+  19 end-to-end scripts demonstrating real-world wikitext processing
+  pipelines: parsing dumps, extracting infoboxes, building link graphs,
+  exporting tables to CSV, validating templates, auditing duplicates,
+  cleaning markup for NLP, full article audits, template migration with
+  argument transforms, media/gallery extraction, and batch processing
+  multiple articles. Load this file when a sub-skill or recipe points
+  you here for a full working script.
+applies_to:
+  - "end-to-end"
+  - "full script"
+  - "pipeline"
+  - "real-world"
+  - "workflow"
+---
+
 # wikitextparser — Practical Examples
 
 > Load this file when the user needs end-to-end scripts, real-world patterns, or multi-step workflows beyond quick snippets.
@@ -19,6 +37,10 @@
 13. [Pretty-print all templates in a page](#13-pretty-print-all-templates-in-a-page)
 14. [Nested template traversal](#14-nested-template-traversal)
 15. [Find broken / empty wikilinks](#15-find-broken--empty-wikilinks)
+16. [Full article audit pipeline](#16-full-article-audit-pipeline)
+17. [Template migration pipeline](#17-template-migration-pipeline)
+18. [Media extraction pipeline](#18-media-extraction-pipeline)
+19. [Batch processing multiple articles](#19-batch-processing-multiple-articles)
 
 ---
 
@@ -404,4 +426,527 @@ def find_self_links(wikitext: str, page_title: str) -> list[str]:
         str(wl) for wl in parsed.wikilinks
         if wl.title.strip().lower() == page_title.lower()
     ]
+```
+
+
+---
+
+## 16. Full article audit pipeline
+
+Combines multiple extraction techniques into a single pass that produces a
+comprehensive report about an article's structure, quality, and content.
+
+```python
+import wikitextparser as wtp
+from collections import Counter
+
+CATEGORY_NS = {'category', 'catégorie', 'kategorie', 'categoría', 'تصنيف', '分类'}
+FILE_NS = {'file', 'image', 'archivo', 'datei', 'fichier', 'ملف'}
+
+
+def audit_article(wikitext: str, page_title: str = '') -> dict:
+    """Run a comprehensive audit on a single article's wikitext."""
+    parsed = wtp.parse(wikitext)
+
+    # --- Templates ---
+    template_names = [t.normal_name() for t in parsed.templates]
+    template_counts = Counter(template_names)
+
+    # Duplicate argument check
+    dup_args = []
+    for t in parsed.templates:
+        names = [a.name.strip() for a in t.arguments if not a.positional]
+        seen = set()
+        for n in names:
+            if n in seen:
+                dup_args.append({'template': t.normal_name(), 'arg': n})
+            seen.add(n)
+
+    # --- Wikilinks ---
+    all_links = []
+    broken_links = []
+    self_links = []
+    for wl in parsed.wikilinks:
+        title = wl.title.strip()
+        if not title:
+            broken_links.append(str(wl))
+        elif title.lower() == page_title.lower():
+            self_links.append(str(wl))
+        else:
+            all_links.append(title)
+
+    # --- Categories ---
+    categories = []
+    for wl in parsed.wikilinks:
+        head, sep, tail = wl.title.partition(':')
+        if sep and head.strip().lower() in CATEGORY_NS:
+            categories.append(tail.strip())
+
+    # --- Files / Images ---
+    files = []
+    for wl in parsed.wikilinks:
+        head, sep, tail = wl.title.partition(':')
+        if sep and head.strip().lower() in FILE_NS:
+            files.append(tail.strip())
+
+    # --- Gallery images ---
+    gallery_images = []
+    for tag in parsed.get_tags('gallery'):
+        if tag.contents:
+            for line in tag.contents.splitlines():
+                line = line.strip()
+                if line and not line.startswith('<!--'):
+                    gallery_images.append(line.partition('|')[0].strip())
+
+    # --- References ---
+    refs = parsed.get_tags('ref')
+    named_refs = [r for r in refs if r.get_attr('name')]
+    reused_refs = [r for r in refs if r.contents is None]
+
+    # --- Sections ---
+    sections = [(s.level, s.title.strip()) for s in parsed.sections if s.title]
+
+    # --- Tables ---
+    tables_info = []
+    for t in parsed.tables:
+        rows = t.data()
+        tables_info.append({
+            'caption': t.caption,
+            'rows': len(rows),
+            'cols': len(rows[0]) if rows else 0,
+        })
+
+    # --- External links ---
+    ext_domains = Counter()
+    for el in parsed.external_links:
+        try:
+            from urllib.parse import urlparse
+            ext_domains[urlparse(el.url).netloc.lower()] += 1
+        except (ValueError, AttributeError):
+            pass
+
+    # --- Plain text stats ---
+    plain = parsed.plain_text()
+    word_count = len(plain.split())
+
+    return {
+        'word_count': word_count,
+        'template_count': len(parsed.templates),
+        'top_templates': template_counts.most_common(10),
+        'duplicate_args': dup_args,
+        'wikilink_count': len(all_links),
+        'broken_links': broken_links,
+        'self_links': self_links,
+        'categories': categories,
+        'files': files,
+        'gallery_images': gallery_images,
+        'ref_total': len(refs),
+        'ref_named': len(named_refs),
+        'ref_reused': len(reused_refs),
+        'sections': sections,
+        'tables': tables_info,
+        'ext_link_domains': ext_domains.most_common(10),
+    }
+
+
+# Usage
+report = audit_article(raw, page_title='Albert Einstein')
+print(f"Words: {report['word_count']}")
+print(f"Templates: {report['template_count']}")
+print(f"Categories: {len(report['categories'])}")
+print(f"References: {report['ref_total']} ({report['ref_named']} named)")
+print(f"Issues: {len(report['broken_links'])} broken links, "
+      f"{len(report['self_links'])} self-links, "
+      f"{len(report['duplicate_args'])} duplicate args")
+```
+
+---
+
+## 17. Template migration pipeline
+
+A complete workflow for migrating from one template to another: rename the
+template, rename/transform arguments, add defaults for new required fields,
+and validate the result.
+
+```python
+import wikitextparser as wtp
+
+
+def migrate_template(
+    wikitext: str,
+    old_name: str,
+    new_name: str,
+    arg_renames: dict[str, str] = None,
+    arg_transforms: dict[str, callable] = None,
+    new_defaults: dict[str, str] = None,
+    remove_args: list[str] = None,
+) -> tuple[str, list[str]]:
+    """
+    Migrate all instances of old_name to new_name with full argument handling.
+
+    Returns: (updated_wikitext, list_of_warnings)
+    """
+    arg_renames = arg_renames or {}
+    arg_transforms = arg_transforms or {}
+    new_defaults = new_defaults or {}
+    remove_args = remove_args or []
+    warnings = []
+
+    parsed = wtp.parse(wikitext)
+
+    for t in parsed.templates:
+        if t.normal_name().lower() != old_name.lower():
+            continue
+
+        # Step 1: Remove deprecated arguments
+        for rm in remove_args:
+            if t.has_arg(rm):
+                t.del_arg(rm)
+
+        # Step 2: Rename arguments (collect values first to avoid conflicts)
+        for old_arg, new_arg in arg_renames.items():
+            a = t.get_arg(old_arg)
+            if a is not None:
+                value = a.value
+                t.del_arg(old_arg)
+                t.set_arg(new_arg, value, preserve_spacing=True)
+
+        # Step 3: Transform argument values
+        for arg_name, transform_fn in arg_transforms.items():
+            a = t.get_arg(arg_name)
+            if a is not None:
+                try:
+                    a.value = transform_fn(a.value)
+                except Exception as e:
+                    warnings.append(
+                        f"Transform failed for {arg_name}: {e}"
+                    )
+
+        # Step 4: Add defaults for new required fields
+        for field, default in new_defaults.items():
+            if not t.has_arg(field):
+                t.set_arg(field, default, preserve_spacing=True)
+
+        # Step 5: Rename the template itself
+        # Preserve any leading/trailing whitespace in the name
+        raw_name = t.name
+        ws_before = len(raw_name) - len(raw_name.lstrip())
+        ws_after = len(raw_name) - len(raw_name.rstrip())
+        if ws_after:
+            t.name = raw_name[:ws_before] + new_name + raw_name[len(raw_name) - ws_after:]
+        else:
+            t.name = raw_name[:ws_before] + new_name
+
+    return str(parsed), warnings
+
+
+# Usage: migrate {{Cite web}} to {{Cite news}} with argument changes
+updated, warns = migrate_template(
+    wikitext=raw,
+    old_name='Cite web',
+    new_name='Cite news',
+    arg_renames={
+        'website': 'newspaper',
+        'url': 'article-url',
+    },
+    arg_transforms={
+        'date': lambda v: v.strip().replace('/', '-'),  # normalize date format
+        'access-date': lambda v: v.strip().replace('/', '-'),
+    },
+    new_defaults={
+        'language': 'en',
+    },
+    remove_args=['archive-url', 'archive-date', 'url-status'],
+)
+
+for w in warns:
+    print(f"WARNING: {w}")
+```
+
+---
+
+## 18. Media extraction pipeline
+
+Extract all media references from an article (file links, gallery entries,
+infobox image fields), parse image parameters, and produce a structured
+manifest.
+
+```python
+import wikitextparser as wtp
+
+FILE_NS = {'file', 'image', 'archivo', 'datei', 'fichier', 'файл', 'ملف'}
+IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp', '.tif', '.tiff'}
+KNOWN_FORMATS = {'thumb', 'thumbnail', 'frame', 'framed', 'frameless'}
+KNOWN_ALIGNS = {'left', 'right', 'center', 'centre', 'none'}
+
+
+def parse_image_options(text: str | None) -> dict:
+    """Parse the |options in [[File:name|options]] into structured fields."""
+    if not text:
+        return {'format': None, 'align': None, 'size': None, 'caption': None}
+    parts = [p.strip() for p in text.split('|')]
+    result = {'format': None, 'align': None, 'size': None, 'caption': None, 'extras': []}
+    for p in parts:
+        low = p.lower()
+        if low in KNOWN_FORMATS:
+            result['format'] = low
+        elif low in KNOWN_ALIGNS:
+            result['align'] = low
+        elif low.endswith('px') and low[:-2].replace('x', '').isdigit():
+            result['size'] = low
+        elif low.startswith(('alt=', 'link=', 'lang=', 'page=', 'class=', 'border', 'upright')):
+            result['extras'].append(p)
+        elif result['caption'] is None:
+            result['caption'] = p
+        else:
+            result['extras'].append(p)
+    return result
+
+
+def extract_all_media(wikitext: str) -> dict:
+    """
+    Extract every media reference in the article from all sources.
+    Returns a dict with 'file_links', 'gallery_items', 'infobox_images'.
+    """
+    parsed = wtp.parse(wikitext)
+
+    # 1. [[File:...]] wikilinks
+    file_links = []
+    for wl in parsed.wikilinks:
+        head, sep, tail = wl.title.partition(':')
+        if sep and head.strip().lower() in FILE_NS:
+            options = parse_image_options(wl.text)
+            file_links.append({
+                'filename': tail.strip(),
+                'options': options,
+                'raw': str(wl),
+            })
+
+    # 2. <gallery> tags
+    gallery_items = []
+    for tag in parsed.get_tags('gallery'):
+        gallery_attrs = {
+            'mode': tag.get_attr('mode'),
+            'widths': tag.get_attr('widths'),
+            'heights': tag.get_attr('heights'),
+            'perrow': tag.get_attr('perrow'),
+        }
+        items = []
+        for line in (tag.contents or '').splitlines():
+            line = line.strip()
+            if not line or line.startswith('<!--'):
+                continue
+            filename, sep, caption = line.partition('|')
+            items.append({
+                'filename': filename.strip(),
+                'caption': caption.strip() if sep else None,
+            })
+        gallery_items.append({
+            'attrs': gallery_attrs,
+            'items': items,
+        })
+
+    # 3. Infobox image fields (common parameter names)
+    IMAGE_FIELDS = {'image', 'image_file', 'img', 'photo', 'picture',
+                    'logo', 'cover', 'map_image', 'flag_image', 'coat_image'}
+    infobox_images = []
+    for t in parsed.templates:
+        if 'infobox' not in t.normal_name().lower():
+            continue
+        for arg in t.arguments:
+            name_lower = arg.name.strip().lower()
+            if name_lower in IMAGE_FIELDS or name_lower.startswith('image'):
+                value = arg.value.strip()
+                if value:
+                    # Check if it looks like a filename
+                    if any(value.lower().endswith(ext) for ext in IMAGE_EXTENSIONS):
+                        infobox_images.append({
+                            'template': t.normal_name(),
+                            'field': arg.name.strip(),
+                            'filename': value,
+                        })
+
+    # Summary
+    all_filenames = set()
+    for f in file_links:
+        all_filenames.add(f['filename'])
+    for g in gallery_items:
+        for item in g['items']:
+            all_filenames.add(item['filename'])
+    for img in infobox_images:
+        all_filenames.add(img['filename'])
+
+    return {
+        'file_links': file_links,
+        'gallery_items': gallery_items,
+        'infobox_images': infobox_images,
+        'total_unique_files': len(all_filenames),
+        'all_filenames': sorted(all_filenames),
+    }
+
+
+# Usage
+media = extract_all_media(raw)
+print(f"Total unique media files: {media['total_unique_files']}")
+print(f"  File links: {len(media['file_links'])}")
+print(f"  Gallery entries: {sum(len(g['items']) for g in media['gallery_items'])}")
+print(f"  Infobox images: {len(media['infobox_images'])}")
+for f in media['file_links'][:5]:
+    print(f"    {f['filename']} — {f['options']['format']}, {f['options']['size']}")
+```
+
+---
+
+## 19. Batch processing multiple articles
+
+Process a collection of articles (from a dump, API, or file system),
+applying transformations and collecting statistics across all pages.
+
+```python
+import wikitextparser as wtp
+from pathlib import Path
+from collections import Counter, defaultdict
+
+CATEGORY_NS = {'category', 'catégorie', 'kategorie', 'categoría', 'تصنيف'}
+
+
+def batch_process(
+    articles: dict[str, str],
+    transforms: list[callable] = None,
+    collect_stats: bool = True,
+) -> dict:
+    """
+    Process multiple articles with optional transforms and statistics.
+
+    articles: {page_title: wikitext}
+    transforms: list of functions (parsed, title) -> None that mutate parsed
+    Returns: {results: {title: updated_wikitext}, stats: {...}}
+    """
+    transforms = transforms or []
+    results = {}
+    stats = {
+        'total_articles': len(articles),
+        'total_templates': Counter(),
+        'total_categories': Counter(),
+        'articles_with_issues': [],
+        'link_graph': defaultdict(list),
+        'template_usage': defaultdict(int),
+    }
+
+    for title, wikitext in articles.items():
+        parsed = wtp.parse(wikitext)
+
+        # Collect stats before transforms
+        if collect_stats:
+            # Template usage
+            for t in parsed.templates:
+                name = t.normal_name()
+                stats['total_templates'][name] += 1
+                stats['template_usage'][name] += 1
+
+            # Categories
+            for wl in parsed.wikilinks:
+                head, sep, tail = wl.title.partition(':')
+                if sep and head.strip().lower() in CATEGORY_NS:
+                    stats['total_categories'][tail.strip()] += 1
+
+            # Link graph
+            for wl in parsed.wikilinks:
+                target = wl.title.strip().split('#')[0]
+                if target and ':' not in target:
+                    stats['link_graph'][title].append(target)
+
+            # Quality issues
+            issues = []
+            # Check for broken links
+            broken = [wl for wl in parsed.wikilinks if not wl.title.strip()]
+            if broken:
+                issues.append(f"{len(broken)} broken links")
+            # Check for duplicate args
+            for t in parsed.templates:
+                names = [a.name.strip() for a in t.arguments if not a.positional]
+                if len(names) != len(set(names)):
+                    issues.append(f"dup args in {t.normal_name()}")
+                    break
+            if issues:
+                stats['articles_with_issues'].append((title, issues))
+
+        # Apply transforms
+        for transform_fn in transforms:
+            transform_fn(parsed, title)
+
+        results[title] = str(parsed)
+
+    if collect_stats:
+        stats['most_used_templates'] = stats['total_templates'].most_common(20)
+        stats['most_common_categories'] = stats['total_categories'].most_common(20)
+        stats['issue_count'] = len(stats['articles_with_issues'])
+
+    return {'results': results, 'stats': stats}
+
+
+# --- Example transforms ---
+
+def remove_deprecated_templates(parsed, title):
+    """Remove {{Cleanup}} and {{Stub}} templates."""
+    deprecated = {'cleanup', 'stub', 'unreferenced'}
+    for t in reversed(parsed.templates):
+        if t.normal_name().lower() in deprecated:
+            del t[:]
+
+
+def normalize_categories(parsed, title):
+    """Sort categories alphabetically at end of article."""
+    cats = []
+    for wl in reversed(parsed.wikilinks):
+        head, sep, tail = wl.title.partition(':')
+        if sep and head.strip().lower() in CATEGORY_NS:
+            cats.append(str(wl))
+            del wl[:]
+    if cats:
+        cats.sort()
+        text = str(parsed).rstrip()
+        parsed.string = text + '\n\n' + '\n'.join(cats) + '\n'
+
+
+def add_missing_references_section(parsed, title):
+    """Add == References == section if article has <ref> but no References heading."""
+    has_refs = bool(parsed.get_tags('ref'))
+    has_section = any(
+        s.title and s.title.strip().lower() == 'references'
+        for s in parsed.sections
+    )
+    if has_refs and not has_section:
+        text = str(parsed).rstrip()
+        parsed.string = text + '\n\n== References ==\n{{Reflist}}\n'
+
+
+# Usage
+articles = {
+    'Article A': wikitext_a,
+    'Article B': wikitext_b,
+    'Article C': wikitext_c,
+}
+
+output = batch_process(
+    articles,
+    transforms=[
+        remove_deprecated_templates,
+        normalize_categories,
+        add_missing_references_section,
+    ],
+    collect_stats=True,
+)
+
+# Print stats
+s = output['stats']
+print(f"Processed {s['total_articles']} articles")
+print(f"Top templates: {s['most_used_templates'][:5]}")
+print(f"Articles with issues: {s['issue_count']}")
+for title, issues in s['articles_with_issues']:
+    print(f"  {title}: {', '.join(issues)}")
+
+# Save results
+for title, updated in output['results'].items():
+    Path(f'output/{title}.txt').write_text(updated, encoding='utf-8')
 ```

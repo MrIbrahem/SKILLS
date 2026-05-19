@@ -1,322 +1,180 @@
 ---
 name: wikitextparser
 description: >
-    Parse, extract, and manipulate MediaWiki wikitext using the wikitextparser Python library.
-    Use this skill whenever the user wants to work with wikitext, Wikipedia markup, or MediaWiki
-    content — including extracting templates, wikilinks, tables, sections, lists, tags, or
-    parser functions; modifying wikitext structure; cleaning markup; or building any pipeline
-    that reads or writes MediaWiki-formatted text. Trigger even for partial tasks like
-    "get all templates from this wiki page", "extract table data", "find wikilinks", or
-    "remove markup from wikitext".
+  Parse, extract, and manipulate MediaWiki wikitext using the wikitextparser
+  Python library. Use this skill whenever the user works with wikitext,
+  Wikipedia/MediaWiki markup, infoboxes, templates, wikilinks, categories,
+  files/images, galleries, tables, sections, lists, refs/citations, parser
+  functions, or any pipeline that reads, edits, cleans, or rewrites
+  MediaWiki-formatted text. Triggers include phrases like "parse wikitext",
+  "extract templates", "get all wikilinks", "convert table to CSV", "remove
+  wiki markup", "find categories", "rename a section", "modify infobox",
+  "extract citations", "list all refs", "find files in article", or any task
+  involving `{{ }}`, `[[ ]]`, `{| |}`, `<ref>`, `<gallery>`, `<!-- -->`, etc.
 ---
 
 # WikiTextParser Skill
 
-A guide for parsing and manipulating MediaWiki wikitext using the `wikitextparser` Python library.
+A modular guide for parsing and manipulating MediaWiki wikitext with the
+[`wikitextparser`](https://pypi.org/project/wikitextparser/) Python library.
 
-## Installation
+> **This skill is split into focused sub-skills.** Read `SKILL.md` first, then
+> open only the sub-skill files that apply to your task. The sub-skills under
+> `skills/` are self-contained: each one explains one element type end-to-end.
+
+---
+
+## 1. Install & import
 
 ```bash
-pip install wikitextparser --break-system-packages
+pip install wikitextparser
 ```
-
-## Core Import
 
 ```python
 import wikitextparser as wtp
+
+parsed = wtp.parse(wikitext_string)   # returns a WikiText object
+```
+
+`wtp.parse` is an alias of `wtp.WikiText`. The library has zero required
+runtime dependencies beyond the regex backport and `wcwidth` (auto-installed).
+
+---
+
+## 2. "I want to ..." — pick a sub-skill
+
+| Goal                                                                | Open                                                          |
+| ------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Understand `parse`, `string`, `plain_text`, `pformat`               | [`skills/01-wikitext-basics.md`](skills/01-wikitext-basics.md) |
+| Read or modify `{{template|args}}` calls                            | [`skills/02-templates.md`](skills/02-templates.md)             |
+| Work with `{{{param|default}}}` declarations (template `/doc`)      | [`skills/03-parameters.md`](skills/03-parameters.md)           |
+| Read or modify `[[wikilinks]]`                                      | [`skills/04-wikilinks.md`](skills/04-wikilinks.md)             |
+| Extract or add `[[Category:...]]`, `[[File:...]]`, `<gallery>`      | [`skills/05-categories-files.md`](skills/05-categories-files.md) |
+| Read tables, get cell data, export to CSV                           | [`skills/06-tables.md`](skills/06-tables.md)                   |
+| Read `[url text]` and bare URLs                                     | [`skills/07-external-links.md`](skills/07-external-links.md)   |
+| Navigate or rename headings (`== Section ==`)                       | [`skills/08-sections.md`](skills/08-sections.md)               |
+| Work with `*`, `#`, `:`, `;` lists                                  | [`skills/09-wikilists.md`](skills/09-wikilists.md)             |
+| Work with `<ref>`, `<gallery>`, `<nowiki>`, comments, bold/italic   | [`skills/10-tags-comments.md`](skills/10-tags-comments.md)     |
+| Inspect parser functions like `{{#if:}}` and `{{#switch:}}`         | [`skills/11-parser-functions.md`](skills/11-parser-functions.md) |
+| Walk parents/ancestors; understand the in-place mutation model      | [`skills/12-tree-navigation.md`](skills/12-tree-navigation.md) |
+| Copy-paste recipes: infobox→dict, refs, link graphs, validation     | [`skills/13-common-patterns.md`](skills/13-common-patterns.md) |
+| Need full method signatures and edge cases                          | [`references/reference.md`](references/reference.md)           |
+| Need long end-to-end pipelines                                      | [`references/examples.md`](references/examples.md)             |
+
+---
+
+## 3. Object map
+
+Every parsed string is a tree of objects sharing one underlying string.
+
+| Class            | How to obtain                                              | Sub-skill                          |
+| ---------------- | ---------------------------------------------------------- | ---------------------------------- |
+| `WikiText`       | `wtp.parse(s)`                                             | `01-wikitext-basics.md`            |
+| `Template`       | `parsed.templates`                                         | `02-templates.md`                  |
+| `Argument`       | `template.arguments`, `template.get_arg(name)`             | `02-templates.md`                  |
+| `Parameter`      | `parsed.parameters`                                        | `03-parameters.md`                 |
+| `WikiLink`       | `parsed.wikilinks`                                         | `04-wikilinks.md`                  |
+| `ExternalLink`   | `parsed.external_links`                                    | `07-external-links.md`             |
+| `Section`        | `parsed.sections`, `parsed.get_sections(...)`              | `08-sections.md`                   |
+| `Table`          | `parsed.tables`, `parsed.get_tables(recursive=True)`       | `06-tables.md`                     |
+| `Cell`           | `table.cells(row, column)`                                 | `06-tables.md`                     |
+| `WikiList`       | `parsed.get_lists(pattern=...)`                            | `09-wikilists.md`                  |
+| `Tag`            | `parsed.get_tags(name)`                                    | `10-tags-comments.md`              |
+| `Comment`        | `parsed.comments`                                          | `10-tags-comments.md`              |
+| `Bold` / `Italic`| `parsed.get_bolds()`, `parsed.get_italics()`               | `10-tags-comments.md`              |
+| `ParserFunction` | `parsed.parser_functions`                                  | `11-parser-functions.md`           |
+
+All classes ultimately inherit from `WikiText`, which means **every property
+access returns objects that are still attached to the same root**. Editing a
+child mutates the root in place. See `12-tree-navigation.md` for details.
+
+---
+
+## 4. 30-second cheat sheet
+
+```python
+import wikitextparser as wtp
+
+parsed = wtp.parse(article)
+
+# Basic enumeration
+parsed.templates         # all {{templates}}
+parsed.wikilinks         # all [[wikilinks]]
+parsed.tables            # all {| tables |} (recursive)
+parsed.external_links    # all [url text] and bare URLs
+parsed.sections          # all sections (lead at index 0)
+parsed.comments          # all <!-- comments -->
+parsed.get_tags('ref')   # all <ref> tags
+
+# Read a template
+t = parsed.templates[0]
+t.name                   # 'Infobox person'
+t.normal_name()          # canonicalized name
+t.get_arg('name').value  # value of |name=
+
+# Modify in place — the change is reflected in str(parsed)
+t.set_arg('birth_date', '1990-01-01')
+str(parsed)              # full updated wikitext
+
+# Strip all wiki markup
+clean = parsed.plain_text()
+
+# Or use the standalone helper
+from wikitextparser import remove_markup
+clean = remove_markup(article)
 ```
 
 ---
 
-## Key Objects & How to Get Them
+## 5. Mental model in one paragraph
 
-| Object         | How to access                                | Common use                      |
-| -------------- | -------------------------------------------- | ------------------------------- |
-| `Template`     | `parsed.templates`                           | Extract/modify template calls   |
-| `WikiLink`     | `parsed.wikilinks`                           | Extract/modify `[[links]]`      |
-| `Section`      | `parsed.sections` or `parsed.get_sections()` | Navigate headings               |
-| `Table`        | `parsed.tables` or `parsed.get_tables()`     | Extract table data              |
-| `WikiList`     | `parsed.get_lists()`                         | Work with bullet/numbered lists |
-| `Tag`          | `parsed.get_tags()`                          | Work with HTML/extension tags   |
-| `ExternalLink` | `parsed.external_links`                      | Work with `[url text]` links    |
-| `Parameter`    | `parsed.parameters`                          | Work with `{{{param}}}`         |
-| `Comment`      | `parsed.comments`                            | Access `<!-- comments -->`      |
+A `WikiText` object holds a single mutable string list shared with every
+descendant. `parsed.templates` gives you `Template` objects whose `string`
+property points into that same buffer. When you write `t.set_arg(...)`, the
+buffer changes; `str(parsed)` reflects the change instantly. There is no
+re-parse and no copy. This is why sub-skills emphasise "edits propagate to the
+root" — it is not a side effect, it is the core design.
 
 ---
 
-## Templates
+## 6. Known limitations (universal)
 
-```python
-parsed = wtp.parse("{{Infobox|name=Alice|age=30}}")
-templates = parsed.templates          # list of Template objects
-t = templates[0]
+- **Not an evaluator.** `{{#if:}}`, `{{ucfirst:}}`, and template expansion are
+  *not* executed. You get the parse tree only.
+- **Localized namespaces** like `[[Categoría:X]]` or `[[ملف:X]]` are valid
+  wikilinks, but the library has no built-in localization table — you must
+  match namespace prefixes yourself (see `05-categories-files.md`).
+- **Templates inside link targets.** In `[[{{name}}]]` the parser cannot know
+  what the template expands to, so it guesses based on syntax.
+- **`Table.data()` does not look inside templates.** Use `table.cells(...)` or
+  parse the cell value separately. See `06-tables.md`.
+- **Extension tag list** is based on English Wikipedia; rarely-used tags from
+  other wikis may parse as plain HTML. See `10-tags-comments.md`.
+- **No `ast.walk()` equivalent.** Traversal is via `.parent()` and
+  `.ancestors()`, plus list properties on each node. See `12-tree-navigation.md`.
 
-t.name                                # 'Infobox'
-t.arguments                           # list of Argument objects
-t.get_arg('name').value               # 'Alice'
-t.set_arg('age', '31')               # modify argument
-t.has_arg('name')                     # True
-t.del_arg('age')                      # remove argument
+---
 
-# Pretty-print a template
-print(t.pformat())
+## 7. Quick decision tree
 
-# Clean duplicate args (safe: only removes true dupes)
-t.rm_dup_args_safe()
-# Clean duplicate args (aggressive: removes first occurrence)
-t.rm_first_of_dup_args()
-
-# Normalized template name (strips namespace, underscores, etc.)
-t.normal_name()
-```
-
-### Template Parameters (`{{{param}}}`)
-
-```python
-param = wtp.parse('{{{name|default}}}').parameters[0]
-param.name       # 'name'
-param.default    # 'default'
-param.default = 'new_default'
-param.append_default('fallback')   # adds another level: {{{name|{{{fallback|default}}}}}}
+```text
+Need to extract data?         →  list properties (parsed.templates, .wikilinks, ...)
+Need exact metadata?          →  use .normal_name(), .get_arg(), .attrs, ...
+Need to modify and re-emit?   →  setters + str(parsed); never rebuild by hand
+Need clean text?              →  parsed.plain_text(...)  or  remove_markup(s)
+Need a CSV/dict?              →  table.data() or {arg.name: arg.value for ...}
+Need to find context?         →  node.parent(type_=...), node.ancestors(...)
+Need recursive structure?     →  parsed.get_tables(recursive=True), .get_lists(...)
 ```
 
 ---
 
-## WikiLinks
-
-```python
-wl = wtp.parse('[[Article title#Section|display text]]').wikilinks[0]
-wl.title      # 'Article title'
-wl.fragment   # 'Section'
-wl.text       # 'display text'
-
-wl.title = 'New Title'
-wl.text = 'New Text'
-del wl.text   # removes pipe and text, leaves [[New Title#Section]]
-```
-
-### Extracting Categories
-
-```python
-categories = [
-    wl for wl in parsed.wikilinks
-    if wl.title.partition(':')[0].strip().lower() in ["category", "κατηγορία"]
-]
-```
-
----
-
-## Sections
-
-```python
-parsed = wtp.parse("== Heading ==\nContent\n=== Sub ==\nMore")
-sections = parsed.sections        # includes lead section (index 0)
-
-s = sections[1]
-s.title                           # 'Heading'
-s.level                           # 2
-s.contents                        # text body of section
-
-s.title = 'New Heading'
-del s.title                       # removes heading line entirely
-
-# Filtered access
-parsed.get_sections(level=2)                        # only h2
-parsed.get_sections(include_subsections=False)      # no nested content
-parsed.get_sections(top_levels_only=True)           # no subsections of subsections
-```
-
----
-
-## Tables
-
-```python
-t = wtp.parse("""{|
-|-
-| A || B
-|-
-| C || D
-|}""").tables[0]
-
-t.data()                          # [['A', 'B'], ['C', 'D']]
-t.data(span=False)                # ignores colspan/rowspan
-t.data(row=0)                     # ['A', 'B']
-t.data(row=0, column=1)           # 'B'
-
-# Cell objects (richer than data())
-cell = t.cells(row=0, column=0)
-cell.attrs                        # dict of HTML attributes
-cell.set('colspan', '2')
-
-t.caption                         # table caption string or None
-t.row_attrs                       # list of dicts per row
-```
-
----
-
-## Lists
-
-```python
-parsed = wtp.parse("* item a\n* item b\n** sub-item\n* item c")
-wl = parsed.get_lists()[0]
-
-wl.items          # [' item a', ' item b', ' item c']  (no sub-items)
-wl.fullitems      # includes sub-item lines
-wl.level          # nesting depth (1-based)
-
-wl.sublists()                     # all sub-lists
-wl.sublists(1)                    # sub-lists of item at index 1
-wl.sublists(pattern=r'\*')        # filter sub-list pattern
-
-# Convert list type
-wl.convert('#')                   # change * to # (unordered → ordered)
-
-# Ordered list
-ol = wtp.WikiList('#a\n#b\n##ba', r'\#')
-ol.sublists()
-```
-
----
-
-## Tags
-
-```python
-p = wtp.parse('<ref name="src">citation text</ref>\n<references/>')
-tags = p.get_tags()
-ref = p.get_tags('ref')[0]
-
-ref.name                          # 'ref'
-ref.contents                      # 'citation text'
-ref.get_attr('name')              # 'src'
-ref.set_attr('name', 'new-src')
-ref.has_attr('name')              # True
-ref.del_attr('name')
-
-ref.name = 'X'                    # rename tag
-```
-
----
-
-## External Links
-
-```python
-el = wtp.parse('[https://example.com Example Site]').external_links[0]
-el.url            # 'https://example.com'
-el.text           # 'Example Site'
-el.in_brackets    # True
-
-el.url = 'https://new.example.com'
-del el.text       # makes it a bare link
-```
-
----
-
-## Stripping Markup
-
-```python
-from wikitextparser import remove_markup, parse
-
-# Function approach
-remove_markup("'''bold''' [[link|text]] <!-- comment -->")
-# → 'bold text '
-
-# Method approach
-parse("'''bold''' [[link|text]]").plain_text()
-# → 'bold text'
-
-# plain_text() accepts fine-grained control:
-parse(s).plain_text(
-    replace_templates=False,       # keep {{templates}}
-    replace_wikilinks=True,        # replace [[links]] with text
-    unescape_html_entities=True,   # &amp; → &
-    replace_bolds_and_italics=True
-)
-```
-
----
-
-## Tree Navigation
-
-```python
-# Find parent / ancestors
-t = wtp.parse("{{a|{{b|{{c}}}}}}").templates[2]  # {{c}}
-t.parent()             # Template('{{b|{{c}}}}')
-t.ancestors()          # [{{b|...}}, {{a|...}}]
-t.ancestors(type_='Template')   # filter by type
-
-# Supported types: 'Template', 'ParserFunction', 'WikiLink',
-#                  'Comment', 'Parameter', 'ExtensionTag'
-```
-
----
-
-## Modifying Content In-Place
-
-All objects share the same underlying string — edits to child objects update the root:
-
-```python
-parsed = wtp.parse("{{t|a=old}}")
-parsed.templates[0].set_arg('a', 'new')
-str(parsed)    # '{{t|a=new}}'
-```
-
-To delete a node:
-
-```python
-del node[:]         # or
-del node.string
-```
-
----
-
-## Common Patterns
-
-### Extract all template names
-
-```python
-[t.name.strip() for t in parsed.templates]
-```
-
-### Get all wikilinks pointing to a namespace
-
-```python
-[wl for wl in parsed.wikilinks if wl.title.startswith('File:')]
-```
-
-### Replace template argument values
-
-```python
-for t in parsed.templates:
-    if t.normal_name() == 'Infobox person':
-        t.set_arg('birth_date', '1990-01-01')
-```
-
-### Extract table as list of dicts (with header row)
-
-```python
-table = parsed.tables[0]
-rows = table.data()
-headers = rows[0]
-records = [dict(zip(headers, row)) for row in rows[1:]]
-```
-
-### Strip all markup for plain-text search
-
-```python
-plain = wtp.parse(wikitext).plain_text()
-```
-
----
-
-## Reference Files
-
--   **`references/reference.md`** — Full documentation for all classes, methods, and properties with precise details. Read it when you need exact signatures or edge-case behavior.
--   **`references/examples.md`** — 15 complete practical examples: extracting Infobox data, exporting tables to CSV, building a wikilink graph, auditing duplicates, and more. Read it when you need a ready-made script or multi-step workflow.
-
-## Known Limitations
-
--   Localized namespace names (e.g. `[[Archivo:...]]` for `[[File:...]]`) are treated as normal wikilinks — use Pywikibot for namespace resolution.
--   Parser functions and magic words are **not** evaluated.
--   Extension tag list is based on English Wikipedia; other wikis may differ.
--   No `ast.walk`-equivalent; use `.ancestors()` / `.parent()` to traverse.
--   Offline parsers can't resolve template contents — `[[{{template}}]]` is guessed as a wikilink.
+## 8. Reference files
+
+- **`references/reference.md`** — full API surface, every method signature,
+  parameter, return type, and edge case (~600 lines).
+- **`references/examples.md`** — 15+ end-to-end scripts covering common
+  workflows from start to finish.
+
+Open these only when a sub-skill points you to them or when you need a detail
+that is not in the focused sub-skill files.
