@@ -33,7 +33,7 @@ Use this file for:
 
 A `Table` is bounded by `{|` ... `|}` and contains:
 
-```
+```text
 {| <table-attrs>
 |+ <caption>
 |- <row-attrs>
@@ -262,8 +262,9 @@ nesting = [t.nesting_level for t in all_t]    # 0, 1, 1, 2, ...
 - **Tables inside parsable extension tags** (e.g. `<onlyinclude>`) are
   found by `get_tables(recursive=True)` because the library re-parses
   inside such tags.
-- **`data()` strips spaces but not tabs/newlines from raw cell strings**
-  except via `strip=True` (default). Pass `strip=False` for fidelity.
+- **`data()` with `strip=True` (the default)** removes leading and trailing
+  whitespace (spaces, tabs, and newlines) from raw cell strings. Pass
+  `strip=False` to preserve the original raw cell content unchanged.
 
 ## Recipes
 

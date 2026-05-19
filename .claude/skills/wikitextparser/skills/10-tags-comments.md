@@ -55,7 +55,8 @@ open/close pair.
 `Comment` represents `<!-- ... -->`. Its contents are read-only.
 
 `Bold` and `Italic` represent `'''text'''` and `''text''`. They expose
-read-only text via `.text` (and a writable `.text` setter).
+`.text` as a read-write property (get returns the inner text; set replaces it
+in place while preserving the surrounding quote tokens).
 
 ## Quick reference
 
@@ -90,7 +91,7 @@ read-only text via `.text` (and a writable `.text` setter).
 | `parsed.get_italics(recursive=True)`                                       | All `Italic` spans                         |
 | `parsed.get_bolds_and_italics(recursive=True, filter_cls=None)`            | Combined (more efficient than two calls)   |
 | `b.text` / `i.text`                                                        | Inner text without the quote tokens. Get/set |
-| `Italic(string, end_token=False)`                                          | Use when the italic doesn't end with `''`  |
+| `Italic(..., end_token=False)`                                             | Internal: represents an unclosed italic span (no closing `''`) |
 
 ## Step by step
 

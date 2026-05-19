@@ -32,7 +32,7 @@ Use this file for:
 
 ## Mental model
 
-```
+```text
 parsed (WikiText)
 ├── shared string buffer (mutable)
 ├── shared spans table  (every Template/WikiLink/.../Section has a span here)
@@ -66,7 +66,7 @@ use the property setters, then read `str(parsed)`.
 
 The `type_` argument of `parent()` / `ancestors()` accepts these strings:
 
-```
+```text
 'Template'
 'ParserFunction'
 'WikiLink'

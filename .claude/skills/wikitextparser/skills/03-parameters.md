@@ -48,8 +48,8 @@ provided". Triple-brace constructs only resolve at template-expansion time.
 | -------------------------------------- | -------------------------------------------------------- |
 | `p.name`                               | Parameter name. Get/set                                  |
 | `p.default`                            | Default value or `None`. Get/set/delete                  |
-| `p.pipe`                               | `'|'` if a default exists, `''` otherwise. Read-only     |
-| `p.append_default(new_default_name)`   | Wrap current default in another `{{{name|...}}}` layer   |
+| `p.pipe`                               | `'\|'` if a default exists, `''` otherwise. Read-only    |
+| `p.append_default(new_default_name)`   | Wrap current default in another `{{{name\|...}}}` layer  |
 | `p.parameters`                         | Nested parameters (excludes self)                        |
 
 ## Step by step

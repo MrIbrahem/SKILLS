@@ -384,7 +384,9 @@ def replace_template(wikitext: str, old_name: str, new_name: str,
         # t.name includes leading/trailing whitespace — preserve it
         ws_before = len(t.name) - len(t.name.lstrip())
         ws_after = len(t.name) - len(t.name.rstrip())
-        t.name = t.name[:ws_before] + new_name + t.name[len(t.name) - ws_after:] if ws_after else t.name[:ws_before] + new_name
+        prefix = t.name[:ws_before]
+        suffix = t.name[len(t.name) - ws_after:] if ws_after else ''
+        t.name = prefix + new_name + suffix
     return str(parsed)
 ```
 

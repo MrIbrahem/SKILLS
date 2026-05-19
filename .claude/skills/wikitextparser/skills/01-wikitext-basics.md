@@ -106,10 +106,10 @@ Most useful flags:
 | ----------------------------- | ------- | ----------------------------------------------------- |
 | `replace_templates`           | `True`  | `True` → drop; `False` → keep; callable → custom text |
 | `replace_parser_functions`    | `True`  | Same as above                                         |
-| `replace_parameters`          | `True`  | `{{{a|b}}}` → `b`, `{{{a}}}` → `''`                   |
+| `replace_parameters`          | `True`  | `{{{a\|b}}}` → `b`, `{{{a}}}` → `''`                  |
 | `replace_tags`                | `True`  | `<s>x</s>` → `x`                                      |
 | `replace_external_links`      | `True`  | `[url text]` → `text`, bare URL → ''                  |
-| `replace_wikilinks`           | `True`  | `[[a|b]]` → `b`, `[[a]]` → `a`. Files always removed. |
+| `replace_wikilinks`           | `True`  | `[[a\|b]]` → `b`, `[[a]]` → `a`. Files always removed.|
 | `unescape_html_entities`      | `True`  | `&amp;` → `&`                                         |
 | `replace_bolds_and_italics`   | `True`  | strips `'''`, `''`                                    |
 | `replace_tables`              | callable| default converter renders tables as TSV-style text    |

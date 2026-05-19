@@ -56,7 +56,7 @@ time but preserved in the source — `wikitextparser` mirrors this.
 | `t.name`                                                                        | Raw name string (may include whitespace)     |
 | `t.normal_name(rm_namespaces=('Template',), code=None, capitalize=False)`       | Canonicalized name                           |
 | `t.arguments`                                                                   | `list[Argument]`                             |
-| `t.get_arg(name)`                                                               | `Argument | None` (last match wins)          |
+| `t.get_arg(name)`                                                               | `Argument` or `None` (last match wins)       |
 | `t.has_arg(name, value=None)`                                                   | `bool`                                       |
 | `t.set_arg(name, value, positional=None, before=None, after=None, preserve_spacing=False)` | Insert/update; see below       |
 | `t.del_arg(name)`                                                               | Delete all args with that name               |
