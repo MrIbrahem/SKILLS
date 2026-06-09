@@ -12,10 +12,11 @@ description: >
 
 ## Goal
 
-Two distinct patterns both warrant extraction into fixtures:
+Three distinct patterns warrant extraction into fixtures:
 
 1. **Repeated `@patch` decorators** — replace with a fixture using `monkeypatch.setattr`
 2. **Repeated in-body mock setup** — replace with a fixture (optionally parametrized or factory-based)
+3. **Grouped Service Mocks (Bundle)** — replace multiple related mocks with a single "service bundle" fixture.
 
 ---
 
